@@ -1,3 +1,24 @@
+# Weekly Downtime and Quest Management Alias
+# This alias automates the tracking of Weekly Downtime, Quest Downtime, and Bounties in Avrae.
+# It allows characters to manage their available downtime, reset weekly progress, and gain bonuses.
+# 
+# Usage:
+# - Running this command resets weekly downtime and applies quest downtime adjustments.
+# - Players can add or spend quest downtime based on their in-game activities.
+# - Automatically grants bounty credits and restores energy based on character stats.
+#
+# Features:
+# - Tracks Weekly Downtime and Quest Downtime with automatic resets.
+# - Allocates bounty progression based on character level.
+# - Calculates and restores character energy at the start of a new week.
+# - Provides an easy way to modify downtime with simple inputs.
+#
+# Notes:
+# - This alias should be run at the start of a new game week to apply downtime resets.
+# - The bot verifies downtime status and ensures values remain within valid limits.
+# - Includes error handling to prevent unintended downtime modifications.
+
+
 !alias embed
 {{err("Please Use <#801325072596860948>", pm_user=False) if ctx.channel.id not in (801325072596860948, 733372211917750409, 756265374328160376) else None}}
 
