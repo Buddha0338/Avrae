@@ -1,0 +1,282 @@
+# Quest Loot Roll Alias
+# This alias automates rolling for loot at the end of a quest in Avrae.
+#
+# Usage:
+# - Run this command to roll for loot after completing a quest.
+# - Resets both Weekly and Quest Downtime to 0 before rolling.
+# - The roll result is determined by character level and Prestige bonuses.
+#
+# Features:
+# - Uses a 1d100 roll modified by Prestige Level.
+# - Assigns loot based on roll results, using predefined loot tables.
+# - Restores Quest Downtime based on level.
+# - Automatically selects the correct loot table based on the character’s level.
+#
+# Notes:
+# - Players **must have downtime available** before rolling for loot.
+# - The higher the Prestige Level, the **greater the loot roll bonus**.
+# - **All downtime is reset to 0 upon rolling for loot**.
+# - If a character has the **War Room**, they gain additional Quest Downtime after rolling.
+# - The script fetches loot results from external game variable tables (GVARs), ensuring loot distribution is based on predefined rules.
+
+
+embed
+{{err("Please Use <#770071091615629323>", pm_user=False) if ctx.channel.id != 770071091615629323 else None}}
+
+-title "Rolls for Loot"
+t,z = "Quest Downtime","Weekly Downtime"
+{{c=character().get_cc("Weekly Downtime")}}
+{{d=character().get_cc("Quest Downtime")}}
+{{character().set_cc("Weekly Downtime",0)}}
+{{character().set_cc("Quest Downtime",0)}}
+{{a=character().get_cc("Weekly Downtime")}}
+{{e=character().get_cc("Quest Downtime")}}
+{{b=vroll("1d100")}} 
+{{s=vroll("1d100")}}
+{{q=vroll("1d100")}}
+<drac2>
+C,L = character(),character().levels.total_level
+if character().cc_exists("Prestige") and L < 5:
+  yy = 1
+elif character().cc_exists("Prestige") and L < 10:
+  yy = 2
+elif character().cc_exists("Prestige") and L < 16:
+  yy = 3
+elif character().cc_exists("Prestige") and L < 21:
+  yy = 4
+elif character().cc_exists("Prestige") and L < 30:
+  yy = 5
+elif not character().cc_exists("Prestige"):
+  yy = 0
+</drac2>
+{{bb=b.total+yy}}
+{{ss=s.total+yy}}
+{{ee=q.total+yy}}
+
+<drac2>
+C,L = character(),character().levels.total_level
+if L < 13:
+  f = 1
+elif L < 30:
+  f = 2
+</drac2>
+{{character().set_cc("Quest Downtime",f)}}
+
+<drac2>
+C,L = character(),character().levels.total_level
+if L < 5:
+  if bb < 65:
+    table=load_json(get_gvar("a7322e72-91ab-45ab-b48b-9cf03e870b1c"))
+  elif bb < 106:
+    table=load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))
+  else: ''
+
+elif L < 9:
+  if bb < 54:
+    table=load_json(get_gvar("a7322e72-91ab-45ab-b48b-9cf03e870b1c"))
+  elif bb < 106:
+    table=load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))
+  else: ''
+
+elif L < 13:
+  if bb < 30:
+    table=load_json(get_gvar("a7322e72-91ab-45ab-b48b-9cf03e870b1c"))
+  elif bb < 45:
+    table=load_json(get_gvar("3f2c36be-58e2-4996-a1ad-6a5bebdc2a84"))
+  elif bb < 90:
+    table=load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))
+  elif bb < 106:
+    table=load_json(get_gvar("3a7eca09-0810-4561-9299-094c996954c3"))
+  else: ''
+
+elif L < 17:
+  if bb < 40:
+    table=load_json(get_gvar("3f2c36be-58e2-4996-a1ad-6a5bebdc2a84"))
+  elif bb < 70:
+    table=load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))
+  elif bb < 86:
+    table=load_json(get_gvar("370ea648-2264-41fd-abff-5c5f8dac5ff5"))
+  elif bb < 95:
+    table=load_json(get_gvar("3a7eca09-0810-4561-9299-094c996954c3"))
+  elif bb < 106:
+    table=load_json(get_gvar("af350838-1d99-4dba-9b66-34ad1be0ff79"))
+  else: ''
+
+elif L < 21:
+  if bb < 60:
+    table=load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))
+  elif bb < 80:
+    table=load_json(get_gvar("370ea648-2264-41fd-abff-5c5f8dac5ff5"))
+  elif bb < 90:
+    table=load_json(get_gvar("3a7eca09-0810-4561-9299-094c996954c3"))
+  elif bb < 95:
+    table=load_json(get_gvar("af350838-1d99-4dba-9b66-34ad1be0ff79"))
+  elif bb < 106:
+    table=load_json(get_gvar("9b14b7a9-d6b2-41cf-80f4-75f5f2ee5fa4"))
+  else: ''
+
+elif L < 26:
+  if bb < 60:
+    table=load_json(get_gvar("370ea648-2264-41fd-abff-5c5f8dac5ff5"))
+  elif bb < 85:
+    table=load_json(get_gvar("3a7eca09-0810-4561-9299-094c996954c3"))
+  elif bb < 92:
+    table=load_json(get_gvar("af350838-1d99-4dba-9b66-34ad1be0ff79"))
+  elif bb < 106:
+    table=load_json(get_gvar("9b14b7a9-d6b2-41cf-80f4-75f5f2ee5fa4"))
+  else: ''
+highest=[x for x in table][-1]
+diceroll=vroll(f"1d{highest}")
+result=[table[x] for x in table if diceroll.total<=int(x)]
+</drac2>
+
+<drac2>
+C,L = character(),character().levels.total_level
+if L < 5:
+  if ss < 65:
+    table=load_json(get_gvar("a7322e72-91ab-45ab-b48b-9cf03e870b1c"))
+  elif ss < 106:
+    table=load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))
+  else: ''
+
+elif L < 9:
+  if ss < 54:
+    table=load_json(get_gvar("a7322e72-91ab-45ab-b48b-9cf03e870b1c"))
+  elif ss < 106:
+    table=load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))
+  else: ''
+
+elif L < 13:
+  if ss < 30:
+    table=load_json(get_gvar("a7322e72-91ab-45ab-b48b-9cf03e870b1c"))
+  elif ss < 45:
+    table=load_json(get_gvar("3f2c36be-58e2-4996-a1ad-6a5bebdc2a84"))
+  elif ss < 90:
+    table=load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))
+  elif ss < 106:
+    table=load_json(get_gvar("3a7eca09-0810-4561-9299-094c996954c3"))
+  else: ''
+
+elif L < 17:
+  if ss < 40:
+    table=load_json(get_gvar("3f2c36be-58e2-4996-a1ad-6a5bebdc2a84"))
+  elif ss < 70:
+    table=load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))
+  elif ss < 86:
+    table=load_json(get_gvar("370ea648-2264-41fd-abff-5c5f8dac5ff5"))
+  elif ss < 95:
+    table=load_json(get_gvar("3a7eca09-0810-4561-9299-094c996954c3"))
+  elif ss < 106:
+    table=load_json(get_gvar("af350838-1d99-4dba-9b66-34ad1be0ff79"))
+  else: ''
+
+elif L < 21:
+  if ss < 60:
+    table=load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))
+  elif ss < 80:
+    table=load_json(get_gvar("370ea648-2264-41fd-abff-5c5f8dac5ff5"))
+  elif ss < 90:
+    table=load_json(get_gvar("3a7eca09-0810-4561-9299-094c996954c3"))
+  elif ss < 95:
+    table=load_json(get_gvar("af350838-1d99-4dba-9b66-34ad1be0ff79"))
+  elif ss < 106:
+    table=load_json(get_gvar("9b14b7a9-d6b2-41cf-80f4-75f5f2ee5fa4"))
+  else: ''
+
+elif L < 26:
+  if ss < 60:
+    table=load_json(get_gvar("370ea648-2264-41fd-abff-5c5f8dac5ff5"))
+  elif ss < 85:
+    table=load_json(get_gvar("3a7eca09-0810-4561-9299-094c996954c3"))
+  elif ss < 92:
+    table=load_json(get_gvar("af350838-1d99-4dba-9b66-34ad1be0ff79"))
+  elif ss < 106:
+    table=load_json(get_gvar("9b14b7a9-d6b2-41cf-80f4-75f5f2ee5fa4"))
+  else: ''
+highest2=[y for y in table][-1]
+diceroll2=vroll(f"1d{highest2}")
+result2=[table[y] for y in table if diceroll2.total<=int(y)]
+</drac2>
+
+<drac2>
+C,L = character(),character().levels.total_level
+if L < 5:
+  if ee < 65:
+    table=load_json(get_gvar("a7322e72-91ab-45ab-b48b-9cf03e870b1c"))
+  elif ee < 106:
+    table=load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))
+  else: ''
+
+elif L < 9:
+  if ee < 54:
+    table=load_json(get_gvar("a7322e72-91ab-45ab-b48b-9cf03e870b1c"))
+  elif ee < 106:
+    table=load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))
+  else: ''
+
+elif L < 13:
+  if ee < 30:
+    table=load_json(get_gvar("a7322e72-91ab-45ab-b48b-9cf03e870b1c"))
+  elif ee < 45:
+    table=load_json(get_gvar("3f2c36be-58e2-4996-a1ad-6a5bebdc2a84"))
+  elif ee < 90:
+    table=load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))
+  elif ee < 106:
+    table=load_json(get_gvar("3a7eca09-0810-4561-9299-094c996954c3"))
+  else: ''
+
+elif L < 17:
+  if ee < 40:
+    table=load_json(get_gvar("3f2c36be-58e2-4996-a1ad-6a5bebdc2a84"))
+  elif ee < 70:
+    table=load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))
+  elif ee < 86:
+    table=load_json(get_gvar("370ea648-2264-41fd-abff-5c5f8dac5ff5"))
+  elif ee < 95:
+    table=load_json(get_gvar("3a7eca09-0810-4561-9299-094c996954c3"))
+  elif ee < 106:
+    table=load_json(get_gvar("af350838-1d99-4dba-9b66-34ad1be0ff79"))
+  else: ''
+
+elif L < 21:
+  if ee < 60:
+    table=load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))
+  elif ee < 80:
+    table=load_json(get_gvar("370ea648-2264-41fd-abff-5c5f8dac5ff5"))
+  elif ee < 90:
+    table=load_json(get_gvar("3a7eca09-0810-4561-9299-094c996954c3"))
+  elif ee < 95:
+    table=load_json(get_gvar("af350838-1d99-4dba-9b66-34ad1be0ff79"))
+  elif ee < 106:
+    table=load_json(get_gvar("9b14b7a9-d6b2-41cf-80f4-75f5f2ee5fa4"))
+  else: ''
+
+elif L < 26:
+  if ee < 60:
+    table=load_json(get_gvar("370ea648-2264-41fd-abff-5c5f8dac5ff5"))
+  elif ee < 85:
+    table=load_json(get_gvar("3a7eca09-0810-4561-9299-094c996954c3"))
+  elif ee < 92:
+    table=load_json(get_gvar("af350838-1d99-4dba-9b66-34ad1be0ff79"))
+  elif ee < 106:
+    table=load_json(get_gvar("9b14b7a9-d6b2-41cf-80f4-75f5f2ee5fa4"))
+  else: ''
+highest3=[z for z in table][-1]
+diceroll3=vroll(f"1d{highest3}")
+result3=[table[z] for z in table if diceroll3.total<=int(z)]
+</drac2>
+{{zz = f+1}}
+{{character().mod_cc("Quest Downtime",+1) if character().cc_exists("War Room") else ''}}
+-desc "{{name}} Rolls for Loot!
+**Prestige Level {{L if character().cc_exists("Prestige") else "0"}}: +{{yy}} to Loot Roll**
+**Rolls: {{b.dice}}, {{s.dice}}, {{q.dice}} -> {{bb}}, {{ss}}, {{ee}}**
+**Result:** {{diceroll}} - {{result[0]}}
+**Result:** {{diceroll2}} - {{result2[0]}}
+**Result:** {{diceroll3}} - {{result3[0]}}
+
+Weekly Downtime: **{{c}}** -> **{{a}}**
+Quest Downtime: **{{d}}** -> **{{e}}**
+New Quest Downtime: **{{zz+" (War Room)" if character().cc_exists("War Room") else f}}**"
+
+-thumb <image>
+-footer "For quests above 6 hours.  Rolling for loot reduces all your available downtime to 0"
