@@ -1,0 +1,66 @@
+# Death Counter Alias
+# This alias tracks the number of times a character has died in Avrae.
+#
+# Usage:
+# - Run this command upon character death to update the death counter.
+# - Tracks the number of deaths and applies penalties upon revival.
+# - Introduces the "One Foot in the Grave" condition, which reduces healing effectiveness.
+#
+# Features:
+# - **Death Counter:** Increments by 1 every time the character dies.
+# - **Resurrection Costs:** The cost of resurrection spells increases based on the number of deaths.
+# - **One Foot in the Grave:** Applies a penalty to healing after revival, requiring downtime to remove.
+# - **Revival DC Scaling:** The DC to be revived increases with the number of deaths.
+#
+# Notes:
+# - **All resurrection costs multiply by the number of deaths** (gold, diamonds, etc.).
+# - **Healing received is halved** unless coming from a Long Rest.
+# - **The "One Foot in the Grave" effect can be removed** by spending downtime equal to its value.
+# - **Revival DC increases using the formula:**  
+#   - **Base DC = 5 + ((2 × Deaths) - 2)**
+# - The alias automatically **creates and tracks counters** for both "Death Counter" and "One Foot in the Grave."
+
+
+
+!alias embed
+{{err("Please Use <#812515675754332262>", pm_user=False) if ctx.channel.id != 812515675754332262 else None}}
+-title "Death Counter - {{name}}" 
+-thumb <image>
+-desc "You have died. Unfortunate, but you shall rise again."
+
+<drac2>
+p = "Death Counter"
+character().create_cc_nx("Death Counter",0,None,reset_to=0)
+character().mod_cc(p,1)
+a = character().get_cc(p)
+</drac2>
+
+<drac2>
+g = "One Foot In The Grave"
+character().create_cc_nx("One Foot In The Grave",0,None,reset_to=0)
+C,L = character(),character().levels.total_level
+if L < 5:
+  b = 1
+elif L < 9:
+  b = 2
+elif L <13:
+  b = 3
+elif L <17:
+  b = 4
+elif L <30:
+  b = 5
+
+character().mod_cc(g,b)
+</drac2>
+
+
+-f "Number of Deaths: {{a}}|
+All forms of resurrection will cost {{a}} time(s) the spells components to bring you back. (Gold, Diamonds, Etc..)"
+
+-f "One Foot in the Grave: {{b}}|
+
+Upon being revived, any healing the creature receives is halved unless that healing comes from a Long Rest. This effect persists until you spend an amount of Downtime ({{b}}) to get rid of the effect."
+
+-f "Revival DC: {{5+((2*a)-2)}}|"
+
+-footer "Use `!dthelp` for help"
