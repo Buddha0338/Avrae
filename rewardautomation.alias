@@ -1,0 +1,45 @@
+# Bronze Quest Rewards Alias
+# This alias automates the calculation of experience and gold rewards for a Bronze-ranked quest in Avrae.
+#
+# Usage:
+# - Run this command after completing a Bronze Quest to calculate individual player rewards.
+# - Requires input for total **quest duration in hours** and **number of players**.
+# - Divides experience and gold evenly among all players.
+#
+# Features:
+# - Calculates experience per player based on the quest duration.
+# - Rolls for total gold rewards using a **12d50+200** roll.
+# - Divides total gold rewards evenly among all players.
+# - Displays a summary of rewards for each player.
+#
+# Notes:
+# - The alias **requires two arguments**:  
+#   - **Quest Duration (`&1&`)** → Number of hours the quest lasted.  
+#   - **Number of Players (`&2&`)** → Total number of participants.
+# - Experience is calculated as:  
+#   - **800 × (quest duration / number of players)**
+# - Gold rewards are determined by:  
+#   - **Rolling 12d50+200**, then dividing the total by the number of players.
+# - Downtime and Loot Rolls **are handled separately** and not included in this alias.
+
+
+
+!alias embed
+-title "Bronze Quest Rewards"
+{{r= &1&}}
+{{s= &2&}}
+
+<drac2>
+  b = r/s
+  c = vroll("12d50+200")
+  d = 1
+</drac2>
+
+-desc "This quest ran for {{r}} hours and included {{s}} players. Experience and Gold is divided evenly among all players.
+
+**__Rewards per player__**
+**Experience:** {{800*b}}
+**Gold:** {{c.total/s}}"
+
+-thumb <image>
+-footer "Downtime and Loot Rolls are done automatically"
