@@ -1,0 +1,71 @@
+# Haven’s Guide to Crusades Alias
+# This alias provides structured information on running Crusades in Avrae.
+#
+# Usage:
+# - Run this command to display guidelines for organizing and participating in Crusades.
+# - Details how downtime, Crusade Points (CP), and game hosting mechanics work.
+# - Outlines CP costs and requirements for hosting different ranks of Crusades.
+#
+# Features:
+# - Explains **Crusade Downtime Rules**:
+#   - Players **do not earn downtime** during a Crusade.
+#   - At the end, players receive downtime **equal to their rank’s reward**.
+# - Introduces **Crusade Points (CP)**:
+#   - Earned by **Game Masters** for hosting quests.
+#   - **4-hour quests = 1 CP**, with **+1 CP per additional 2 hours**.
+# - Details **CP Requirements for Running a Crusade**:
+#   - Bronze → 2 CP
+#   - Silver → 3 CP
+#   - Electrum → 4 CP
+#   - Gold → 5 CP
+#   - Platinum → 6 CP
+#   - **Extra CP costs apply** for additional games or extra players.
+# - Provides an **example Crusade setup** for cost calculations.
+#
+# Notes:
+# - **Characters are locked in roleplay** during a Crusade.
+# - **Players on Crusades have lower priority** for other quests.
+# - **Downtime activities are restricted**, but some exceptions apply (e.g., relaxation, work, pit fighting).
+# - This alias **serves as a GM guide**, ensuring smooth execution of Crusades.
+
+
+!alias embed
+-title "Haven's Guide to Crusades" 
+
+-desc "Crusades provde the GM the oppertunity to weave together a story for a select amount of players, allowing them to create a more immersive way to play.
+
+**__Downtime__**
+Players do not earn any downtime while on the crusade but instead, get a mass amount of downtime at the very end equal to the ranks relevant. 
+
+**__Crusade Points (CP)__**
+Game Masters and above earn crusade points for every quest they host to spend on hosting crusades, excluding the crusade itself. The higher ranked the crusade, the more CP is required. Each 4 hour quest hosted will earn 1 CP, for every 2 hours beyond that an additional CP is earned.
+
+**__Running a Crusade__**
+The CP Requirement table shows how much CP is needed to run a 2 game crusade for 5 players. 
+
+A 6th player in a 2 game crusade will be 1 additional CP, similarly, a 6th player in 3 crusade games will be 2 additional CP.
+
+**__CP Requirement Table__**
+Bronze: 2
+Silver: 3
+Electrum: 4
+Gold: 5
+Platinum: 6
+
+• Add 1 CP for each game beyond the second.
+• Add 1 CP for each extra player beyond the 5th for each game. 
+
+__Running a Crusade - Example__
+Silver Crusade with 7 players and 4 games.
+Base Cost: 3CP (Silver)
+Two additional players: +2CP
+Two additional games: +4CP (+1CP per additional player per game)
+Total CP required: 9CP
+
+**__Notes__**
+Characters are locked in roleplay
+Players in crusades have lower priority
+Characters can't spend downtime (some exceptions)
+> relaxation, work, pit fighting, maybe more"
+
+-f "Game Masters earn CP for every game they host"
