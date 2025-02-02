@@ -1,0 +1,90 @@
+!alias embed
+{{err("Please Use <#801325072596860948>", pm_user=False) if ctx.channel.id not in (801325072596860948, 733372211917750409, 756265374328160376) else None}}
+
+<drac2>
+t,f,a,b,l,h,fs,r,b1,s1,e1,g1,p1,mp,en = "Quest Downtime","Weekly Downtime","&1&","&2&",1586044800,get_gvar("db450171-ec03-4767-93f9-332e17c7ca44"),0, "Weekly Roleplay XP","Bronze Bounty","Silver Bounty","Electrum Bounty","Gold Bounty","Platinum Bounty","Magic Council Points", "Energy"
+wk = int(floor(((time() - l) / 604800)))
+
+# This section is for bounties
+C,L = character(),character().levels.total_level
+STR, CON, DEX = C.stats.strength, C.stats.constitution, C.stats.dexterity
+INT, WIS, CHA = C.stats.intelligence, C.stats.wisdom, C.stats.charisma
+proficiency_bonus = character().stats.prof_bonus
+
+# Bounty Set up
+if not character().cc_exists(mp):
+  character().create_cc(mp, 0, 999, None, 'number')
+  character().set_cc(mp, 0)
+if not character().cc_exists(b1) and L < 5:
+  character().create_cc(b1,0,2,None)
+if not character().cc_exists(s1) and L < 9:
+  character().create_cc(s1,0,2,None)
+  character().create_cc(b1,0,2,None)
+if not character().cc_exists(e1) and L < 13:
+  character().create_cc(e1,0,1,None)
+  character().create_cc(s1,0,2,None)
+  character().create_cc(b1,0,2,None)
+if not character().cc_exists(g1) and L < 17:
+  character().create_cc(g1,0,1,None)
+  character().create_cc(e1,0,1,None)
+  character().create_cc(s1,0,2,None)
+  character().create_cc(b1,0,2,None)
+if not character().cc_exists(p1) and L < 30:
+  character().create_cc(p1,0,1,None)
+  character().create_cc(g1,0,1,None)
+  character().create_cc(e1,0,1,None)
+  character().create_cc(s1,0,2,None)
+  character().create_cc(b1,0,2,None)
+else: ''
+# Bounty section ends here
+
+# Energy
+Energy_max = (L + CON + proficiency_bonus) // 2
+if not C.cc_exists(en):
+    C.create_cc(en, 0, Energy_max, None, 'number')
+    C.set_cc(en, Energy_max)
+
+if not character().cc_exists(r):
+  character().create_cc(r, 0, 1, None, 'number')
+  character().set_cc(r, 0)
+ex = character().cc_exists(t)
+su = not ex
+if su:
+ character().create_cc(t, 0)
+ character().create_cc(f,0,1,None)
+ character().set_cvar_nx("dt_last_reset", wk)
+ud = exists("dt_last_reset") and (wk > int(dt_last_reset)) and character().get_cc(f)==0
+sp = min([int(a), -1*int(a)]) if a.strip("-").isdigit() else min([int(b), -1*int(b)]) if str(a+b).strip("-").isdigit() else int(a) if a.strip("+").isdigit() else int(b) if a == "+" and b.isdigit() else ""
+mi = sp and "+" not in a 
+st = a == "set" and ex and b.isdigit()
+of,ot=character().get_cc(f),character().get_cc(t)
+if ud:
+ character().set_cc(f, 1)
+ character().set_cc(r, 0)
+ character().set_cc(b1,2)
+ character().set_cc(s1,2)
+ character().set_cc(e1,1)
+ character().set_cc(g1,1)
+ character().set_cc(p1,1)
+ character().set_cc(en,L+CON+proficiency_bonus)
+ character().set_cvar("dt_last_reset", wk)
+if (sp and ex):
+ if mi and character().get_cc(f)==1:
+  sp=sp+1
+  character().mod_cc(t, sp, strict=True)
+  character().set_cc(f, 0)
+  fs=1
+ else:
+  character().mod_cc(t, sp, strict=True)
+if st:
+ character().set_cc(t, int(b), strict=True)
+</drac2>
+-title "{{f"{name} rests up for the week." if su else f"{name} adjusts their days" if st else f"{name} finds more time!\nWeekly Roleplay XP Reset" if ud else "I'm here to help!" if not sp and not "&1"+"&"=="&1&" and not mi else f"{name} checks their available free time."}}"
+-desc "{{h if not "&1"+"&"=="&1&" and not (sp or su or st or ud or fs) else ""}}"
+{{f'-f "You gain 1 Weekly Downtime.|** **"' if ud else ''}}
+{{f'-f "You gain {sp} Quest Downtime.|** **"' if sp and sp > 0 else ''}}
+{{f'-f "You spend{" 1 Weekly Downtime and" if fs else ""} {sp*-1} Quest Downtime.|** **"' if fs or (sp and sp < 0) else ''}}
+{{f'-f "Weekly Downtime: {of} -> {character().get_cc(f)}\nQuest Downtime: {ot} -> {character().get_cc(t)}\nWeekly Roleplay XP: {character().get_cc(r)}/1\nYour Energy restores at the beginning of the week|** **"' if character().cc_exists(t) and a != "help" and a != "?" else ''}}
+
+-thumb "https://imgur.com/bxlVHCi.png"
+-footer "{{f"For assistance, use !dt help."}}"
