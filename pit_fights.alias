@@ -1,0 +1,116 @@
+# Pit Fighting Alias
+# This alias automates the process of participating in pit fights using downtime in Avrae.
+#
+# Usage:
+# - Run this command to spend downtime engaging in pit fighting.
+# - Requires Weekly or Quest Downtime to initiate a fight.
+# - Success is determined by rolling against three skill-based DCs (Athletics, Acrobatics, and Constitution).
+# - Rewards gold based on performance in the fights.
+#
+# Features:
+# - Deducts 1 Weekly or Quest Downtime upon use.
+# - Rolls three skill checks:
+#   - **Athletics**
+#   - **Acrobatics**
+#   - **Constitution**
+# - Compares rolls against randomly generated DCs to determine success.
+# - Rewards gold based on the number of successful rolls:
+#   - **200 GP** for success in all three checks.
+#   - **100 GP** for success in two checks.
+#   - **50 GP** for success in one check.
+#   - **0 GP** for failing all checks.
+# - Automatically adds earned gold to the character’s Coin Pouch.
+#
+# Notes:
+# - Players **must have downtime available** before using this alias.
+# - The skill checks simulate **different aspects of pit fighting**:
+#   - Athletics for raw strength and grappling.
+#   - Acrobatics for agility and dodging.
+#   - Constitution for endurance and stamina.
+# - Gold earnings **scale with performance**.
+# - If a player **does not have downtime available**, the alias prevents the action.
+# - Coins are **automatically added** to the player’s inventory.
+
+
+
+!alias embed
+{{err("Please Use <#801325072596860948>", pm_user=False) if ctx.channel.id not in (801325072596860948, 733372211917750409, 756265374328160376, 733372413001334907) else None}}
+
+-title "Pit Fighting" 
+-thumb <image>
+
+t,z = "Quest Downtime","Weekly Downtime"
+{{j=character().get_cc("Weekly Downtime")}}
+{{k=character().get_cc("Quest Downtime")}}
+
+<drac2>
+t,w,q,ws="Pit Fighting","Weekly Downtime","Quest Downtime",0
+if not (character().cc_exists(w) and character().cc_exists(q)):
+  err('Required counters missing. Run !dt first.')
+elif character().get_cc(w):
+  character().mod_cc(w,-1)
+  ws=1
+elif character().get_cc(q):
+  character().mod_cc(q,-1)
+else:
+  err('No downtime remaining.')
+</drac2>
+{{l=character().get_cc("Weekly Downtime")}}
+{{m=character().get_cc("Quest Downtime")}}
+
+<drac2>
+roll1 = vroll("2d10+5")
+a=roll1.total
+roll2 = vroll("2d10+5")
+b=roll2.total
+roll3 = vroll("2d10+5")
+c=roll3.total
+
+char = character()
+athletics = char.skills.athletics
+religRoll = vroll(athletics.d20(min_val=(char.csettings.get('talent') or 0)*10 or None if athletics.prof >= 1 else None))
+
+acrobatics = char.skills.acrobatics
+religRoll2 = vroll(acrobatics.d20(min_val=(char.csettings.get('talent') or 0)*10 or None if acrobatics.prof >= 1 else None))
+
+constitution = char.skills.constitution
+religRoll3 = vroll(constitution.d20(min_val=(char.csettings.get('talent') or 0)*10 or None if constitution.prof >= 1 else None))
+
+succ1=religRoll.total>=a
+succ2=religRoll2.total>=b
+succ3=religRoll3.total>=c
+
+aa=succ1+succ2+succ3
+ab=succ1 and succ2
+ac=succ1 and succ3
+ad=succ2 and succ3
+
+</drac2>
+
+-desc  "{{name}} spends one {{'Weekly Downtime' if ws else 'Quest Downtime'}} Pit fighting."
+
+-f "Results - Skill Check DC: Your Rolls|
+Athletics DC {{a}}: **{{religRoll.total}} - {{'Success' if religRoll.total>=a else 'Fail'}}**
+Acrobatics DC {{b}}: **{{religRoll2.total}} - {{'Success' if religRoll2.total>=b else 'Fail'}}**
+Constitution DC {{c}}: **{{religRoll3.total}} - {{'Success' if religRoll3.total>=c else 'Fail'}}**
+
+**You gain {{'200 GP' if succ1 and succ2 and succ3 else '100 GP' if ab or ac or ad else '50 GP' if succ1 or succ2 or succ3 else '0 GP'}}**"
+
+{{b = 200 if succ1 and succ2 and succ3 else 100 if ab or ac or ad else 50 if succ1 or succ2 or succ3 else '0'}}
+
+<drac2>
+bags = load_json(get('bags', '[]'))
+bagsDict = {bag: items for bag, items in bags}
+coins = bagsDict.get('Coin Pouch', {"cp": 0, "sp": 0, "ep": 0, "gp": 0, "pp": 0})
+coins['gp'] += b
+
+bagsDict['Coin Pouch'] = coins
+character().set_cvar('bags', dump_json(list(bagsDict.items())))
+</drac2>
+
+-f "Downtime: | Weekly Downtime: {{j}} -> {{l}}
+Quest Downtime {{k}} -> {{m}}
+Gold Coins: {{coins['gp']-b}} -> {{coins['gp']}}"
+
+-footer "Use !dthelp for help
+Coins have been automatically added to your pouch"
