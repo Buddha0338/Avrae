@@ -1,0 +1,53 @@
+# Masterwork Alias
+# This alias provides detailed information on Masterwork weapons and armor in Avrae.
+#
+# Usage:
+# - Run this command to display Masterwork crafting rules, requirements, and commands.
+# - Explains the Masterwork system, gem requirements, and crafting rules.
+# - Lists available gemstones and their upgrade paths.
+#
+# Features:
+# - **Masterwork Equipment Rules**:
+#   - Counts as magical for overcoming resistance and immunity.
+#   - Retains bonuses even in antimagic fields.
+# - **Masterwork Crafting Requirements**:
+#   - Requires a **Workstation, Tool Expertise, Masterwork Gem, Gold, Downtime, and Base Item**.
+# - **New Feat: Mastercraft**:
+#   - Grants proficiency and expertise in one tool.
+#   - Increases an ability score by 1.
+# - **Gemstone Crafting System**:
+#   - Lists gemstone tiers and their costs.
+#   - Explains the **gemstone merging system** for upgrading lower-tier gems.
+# - **Masterwork Crafting Commands**:
+#   - `!masterwork weapon` → Rolls on the Masterwork weapon table.
+#   - `!masterwork armor` → Rolls on the Masterwork armor table.
+#
+# Notes:
+# - **Masterwork crafting is a high-level system**, requiring significant investment.
+# - **Higher-tier gemstones allow for additional property rolls** when crafting.
+# - **Downtime and resources** are essential to upgrading and merging gemstones.
+# - This alias provides a **quick-reference guide** for Masterwork crafting.
+
+
+
+!alias embed
+{{err("Please Use <#733378054532890675>", pm_user=False) if ctx.channel.id not in (733378054532890675, 1030709198784299038, 771879736494260264, 733372413001334907) else None}}
+-title "Masterwork Weapon Roll"
+
+{{b=vroll("1d100")}} 
+{{bb=b.total}}
+
+<drac2>
+table=load_json(get_gvar("1d40519b-1552-47f0-8b86-de293cb669b6"))
+highest=[x for x in table][-1]
+diceroll=vroll(f"1d{highest}")
+result=[table[x] for x in table if diceroll.total<=int(x)]
+</drac2>
+
+-desc "{{name}} creates a Masterwork Weapon +3!
+**Roll:** {{diceroll}}
+**Result:** {{result[0]}}
+
+[Masterwork](https://homebrewery.naturalcrit.com/share/1N__TC6V3skYltjsFX-CRcP9AVjbFWZbRFoZcHJJI-wMh) table"
+
+-thumb <image>
