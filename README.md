@@ -1,5 +1,6 @@
 # Avrae
 Custom Aliases using Avrae API
+Date: June 23rd, 2021
 # Aliases created for function on Discord's API using Avrae API
 
 Avrae API can be found here
