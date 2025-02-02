@@ -1,0 +1,87 @@
+# Mount Ravenhall Alias
+# This alias automates the process of attempting the Mount Ravenhall trial in Avrae.
+#
+# Usage:
+# - Run this command to attempt the Mount Ravenhall trial.
+# - The character rolls three skill checks (Acrobatics, Strength Save, and Wisdom Save) against increasing DCs.
+# - The trial outcome is determined by how many checks the character succeeds before their first failure.
+#
+# Features:
+# - Rolls three skill checks:
+#   - **Acrobatics** (DC 13) to navigate the jagged peaks.
+#   - **Strength Save** (DC 16) to withstand the mountain's brutal conditions.
+#   - **Wisdom Save** (DC 19) to maintain focus and resolve.
+# - Progression system:
+#   - **3 successes** → Character reaches the **summit**, achieving tranquility and mastery.
+#   - **2 successes** → Character climbs high but falls, indicating unresolved fear.
+#   - **1 success** → Character begins the climb but falls early, symbolizing inner struggle.
+#   - **0 successes** → Character is not yet strong enough to attempt the journey.
+# - Displays immersive descriptions based on the character’s performance.
+#
+# Notes:
+# - The **trial is an introspective journey**, reflecting the character’s personal growth.
+# - The outcome **symbolizes inner strength, unresolved trauma, or untapped potential.**
+# - Players must test their **physical and mental endurance** through the mountain’s challenges.
+# - Failure does not impose penalties, but only those who succeed completely **reach true mastery**.
+# - The alias includes **flavor text** to enhance immersion and storytelling.
+
+
+!alias embed
+-title "Mount Ravenhall" 
+-thumb <image>
+
+<drac2>
+a = 13
+b = 16
+c = 19
+
+char = character()
+acrobatics = char.skills.acrobatics
+religRoll = vroll(acrobatics.d20(min_val=(char.csettings.get('talent') or 0)*10 or None if acrobatics.prof >= 1 else None))
+
+save = character().saves.get("strength")
+religRoll2 = vroll(character().saves.get("strength").d20())
+
+save = character().saves.get("wisdom")
+religRoll3 = vroll(character().saves.get("wisdom").d20())
+
+succ1=religRoll.total>=a
+succ2=religRoll2.total>=b
+succ3=religRoll3.total>=c
+
+aa=succ1+succ2+succ3
+ab=succ1
+ac=succ1 and succ2
+
+roll_results = []
+roll_results.append((a, religRoll, 'Acrobatics Check DC'))
+roll_results.append((b, religRoll2, 'Strength Save DC'))
+roll_results.append((c, religRoll3, 'Wisdom Save DC'))
+
+# Calculate how many successes occurred before the first failure
+success_count = 0
+for dc, roll_check, label in roll_results:
+    if roll_check.total >= dc:
+        success_count += 1
+    else:
+        break
+</drac2>
+
+<drac2>
+desc_fields = ""
+for i in range(success_count):
+    dc, roll_check, label = roll_results[i]
+    desc_fields += f"{label}: {dc} - {roll_check.total} (Success)\n"
+</drac2>
+
+-desc  "{{name}} attempts to prove themselves through Mount Ravenahll."
+
+-f "Results|{{desc_fields}}
+{{'**You fail to reach the summit**' if success_count != 3 else ''}}
+"
+
+-f "The Trial | 
+You {{'climb the jagged peaks of the mountain, brave the violent winds that rage against you, and steele your resolve from the heights. You reach the platform surrounded by a vast lake and endless rockfall the greenery born of the trees and flora come together in their own ballet dance, yet it is so vast that it is stable. A training grounds established at the center of the lake shines by the rising of the sun, the sounds of the rushing falls dilute all other noise, and the aromatic freshness in the air soothes your body along with the songs of sky-borne birds. And you, you feel the tranquility in its harmonious surrounding, you feel an inner calm, no longer anchored to anything other than yourself.' if success_count == 3 else 'bolster through the mountains edge and brave the strong winds that rage against you but the inner fear of the new heights you have attained frightens you. Perhaps you have yet to come to terms with your own destiny. You fall and fail to reach the summit.' if success_count == 2 else 'climb the jagged peaks of the mountain side however the raging winds hurl against you as your grip fails and you fall. Perhaps it symbolizes that you have not yet let go of something from the past, or perhaps you have too early let go.' if success_count == 1 else 'attempt to climb to the peaks of the mountain but are not yet strong enough. Perhaps you have yet to find your inner strength.'}}"
+
+-image "https://media.discordapp.net/attachments/750200623881912400/750202594894282762/thor_01-1.jpg?width=991&height=497"
+-footer "Art by Justin Yun"

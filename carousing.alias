@@ -1,0 +1,89 @@
+# Carousing Alias
+# This alias automates the process of socializing and networking using downtime in Avrae.
+#
+# Usage:
+# - Run this command to spend downtime carousing and making contacts.
+# - Requires Weekly or Quest Downtime to initiate.
+# - The character rolls a Persuasion check to determine the number and type of contacts made.
+# - Costs gold based on the social class level chosen (Lower, Middle, Upper).
+#
+# Features:
+# - Deducts 1 Weekly or Quest Downtime upon use.
+# - Rolls a **Persuasion check** to determine the outcome.
+# - Costs gold depending on the social tier:
+#   - **10 GP** for Lower-Class Carousing.
+#   - **50 GP** for Middle-Class Carousing.
+#   - **250 GP** for Upper-Class Carousing.
+# - Contacts gained depend on the Persuasion check result:
+#   - **<5:** A hostile contact.
+#   - **5-9:** No new contacts.
+#   - **10-14:** One allied contact.
+#   - **15-19:** Two allied contacts.
+#   - **20+:** Three allied contacts.
+# - Automatically deducts gold from the character’s Coin Pouch.
+#
+# Notes:
+# - Players **must have downtime available** before using this alias.
+# - The **gold cost is deducted immediately** based on the selected tier.
+# - The **Persuasion roll outcome** determines the type and number of contacts gained.
+# - If a player **does not have enough gold**, the alias prevents the transaction.
+# - Contacts are **classified by social class** (lower, middle, or upper).
+
+
+
+!alias embed
+{{err("Please Use <#801325072596860948>", pm_user=False) if ctx.channel.id not in (801325072596860948, 733372211917750409, 756265374328160376) else None}}
+
+-title "Carousing" 
+-thumb <image>
+t,z = "Quest Downtime","Weekly Downtime"
+{{j=character().get_cc("Weekly Downtime")}}
+{{k=character().get_cc("Quest Downtime")}}
+<drac2>
+t,w,q,ws="Carousing","Weekly Downtime","Quest Downtime",0
+if not (character().cc_exists(w) and character().cc_exists(q)):
+  err('Required counters missing. Run !dt first.')
+elif character().get_cc(w):
+  character().mod_cc(w,-1)
+  ws=1
+elif character().get_cc(q):
+  character().mod_cc(q,-1)
+else:
+  err('No downtime remaining.')
+</drac2>
+{{l=character().get_cc("Weekly Downtime")}}
+{{m=character().get_cc("Quest Downtime")}}
+
+<drac2>
+char = character()
+persuasion = char.skills.persuasion
+religRoll = vroll(persuasion.d20(min_val=(char.csettings.get('talent') or 0)*10 or None if persuasion.prof >= 1 else None))
+f= religRoll.total
+</drac2>
+{{r= "&*&"}}
+{{b= 10  if r == "10" else 50 if r == "50" else 250 if r == "250" else ''}}
+{{rr = "lower class"  if r == "10" else "middle class" if r == "50" else "upper class" if r == "250" else ''}}
+
+<drac2>
+bags = load_json(get('bags', '[]'))
+bagsDict = {bag: items for bag, items in bags}
+coins = bagsDict.get('Coin Pouch', {"cp": 0, "sp": 0, "ep": 0, "gp": 0, "pp": 0})
+coins['gp'] -= b
+
+bagsDict['Coin Pouch'] = coins
+character().set_cvar('bags', dump_json(list(bagsDict.items())))
+</drac2>
+
+-desc  "{{name}} spends one {{'Weekly Downtime' if ws else 'Quest Downtime'}} Carousing."
+
+-f "Results|
+Persuasion Roll: {{f}}
+You have made {{'a hostile contact' if f < 5 else 'no new contacts' if f < 10 else 'an allied contact' if f < 15 else 'two allied contacts' if f < 20 else 'three allied contacts' if f < 100 else ''}} from the {{rr}}.
+Cost: {{r}}GP"
+
+-f "Downtime | Weekly Downtime: {{j}} -> {{l}}
+Quest Downtime: {{k}} -> {{m}}
+Gold Coins: {{coins['gp']+b}} -> {{coins['gp']}}"
+
+-footer "Use !dthelp for help
+Coins have been automatically added to your pouch"

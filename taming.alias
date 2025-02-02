@@ -1,0 +1,101 @@
+# Taming Beasts Alias
+# This alias automates the process of taming wild creatures using downtime and an Animal Handling skill check in Avrae.
+#
+# Usage:
+# - Run this command to spend downtime attempting to tame a wild beast.
+# - Requires Weekly or Quest Downtime to initiate the taming process.
+# - The DC for taming is determined by the challenge rating (CR) of the beast.
+# - A beast is fully tamed after **three successful attempts**.
+#
+# Features:
+# - Deducts 1 Weekly or Quest Downtime upon use.
+# - Rolls an Animal Handling check to determine taming success.
+# - Tracks taming progress over multiple downtime sessions.
+# - Deducts 50 GP per attempt from the character’s Coin Pouch.
+# - Automatically removes the "Taming Beast" tracker once the beast is fully tamed.
+#
+# Notes:
+# - Players **must have downtime available** before using this alias.
+# - The **taming DC scales with the creature’s CR** (DC = CR + 8).
+# - If a player **does not have enough gold**, the alias prevents the transaction.
+# - Progress is tracked until **three successful taming attempts** are made.
+# - Upon full taming, the "Taming Beast" counter is **automatically deleted**.
+# - If unsuccessful, players must continue spending downtime until the beast is tamed.
+
+
+
+
+!alias embed
+{{err("Please Use #logbook-downtime", pm_user=False) if ctx.channel.id != 801325072596860948 else None}}
+-title "Taming Beasts" 
+-thumb <image>
+{{j=character().get_cc("Weekly Downtime")}}
+{{k=character().get_cc("Quest Downtime")}}
+
+<drac2>
+t,w,q,ws="Taming Beast","Weekly Downtime","Quest Downtime",0
+character().create_cc_nx("Taming Beast",0,3,reset_to=0)
+if not (character().cc_exists(w) and character().cc_exists(q)):
+  err('Required counters missing. Run !dt first.')
+elif character().get_cc(w):
+  character().mod_cc(w,-1)
+  ws=1
+elif character().get_cc(q):
+  character().mod_cc(q,-1)
+else:
+  err('No downtime remaining.')
+</drac2>
+
+{{l=character().get_cc("Weekly Downtime")}}
+{{m=character().get_cc("Quest Downtime")}}
+{{n= &1&}}
+{{r= "&*&"}}
+
+<drac2>
+da=n+8
+dc=da
+char = character()
+animalHandling = char.skills.animalHandling
+tamingRoll = vroll(animalHandling.d20(min_val=(char.csettings.get('talent') or 0)*10 or None if animalHandling.prof >= 1 else None))
+succ=tamingRoll.total>=dc
+if succ:
+  character().mod_cc(t,1)
+if character().get_cc(t) == 3:
+  tamed = True
+else:
+  tamed = False
+</drac2>
+
+-desc "{{name}} spends one {{'Weekly Downtime' if ws else 'Quest Downtime'}} attempts to tame a wild CR {{r}}"
+
+-f '{{"Success!|You succeed in taming the wild CR &*&." if succ else "Failure!|You fail to tame the wild CR &*&."}}'
+-f '{{"Congratulations!|You have fully tamed the wild beast!" if tamed else ""}}'
+
+<drac2>
+bags = load_json(get('bags', '[]'))
+bagsDict = {bag: items for bag, items in bags}
+coins = bagsDict.get('Coin Pouch', {"cp": 0, "sp": 0, "ep": 0, "gp": 0, "pp": 0})
+o=50
+coins['gp'] -= o
+bagsDict['Coin Pouch'] = coins
+character().set_cvar('bags', dump_json(list(bagsDict.items())))
+</drac2>
+
+-f "Results - DC: {{dc}}|
+Taming Results: {{tamingRoll}}
+Taming Progress: {{character().get_cc('Taming Beast')}}/3"
+
+-f "Downtime: | Weekly Downtime: {{j}} -> {{l}}
+Quest Downtime: {{k}} -> {{m}}
+Cost: {{o}} GP
+Gold Coins: {{coins['gp']+o}} -> {{coins['gp']}}"
+
+<drac2>
+if character().get_cc(t) == 3:
+  character().delete_cc(t)
+else:
+  ''
+</drac2>
+
+-footer "Use `!dthelp` for help
+Coins have been automatically removed from your pouch"

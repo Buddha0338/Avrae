@@ -1,0 +1,104 @@
+# Crime Alias
+# This alias automates the process of engaging in criminal activities using downtime in Avrae.
+#
+# Usage:
+# - Run this command to spend downtime engaging in crime.
+# - Requires Weekly or Quest Downtime to initiate.
+# - The character rolls three skill checks (Stealth, Deception, and Investigation) against a user-provided DC.
+# - The amount of gold stolen depends on the number of successful rolls.
+#
+# Features:
+# - Deducts 1 Weekly or Quest Downtime upon use.
+# - Rolls three skill checks:
+#   - **Stealth** to avoid detection.
+#   - **Deception** to mislead others.
+#   - **Investigation** to identify valuable targets.
+# - Compares rolls against a user-defined DC to determine success.
+# - Gold rewards based on success level:
+#   - **3 successes** → **1,000 GP** (robbing the richest figure in town).
+#   - **2 successes** → **200 GP** (robbing a noble).
+#   - **1 success** → **100 GP** (robbing a prosperous merchant).
+#   - **0 successes** → **50 GP** (robbing a struggling merchant).
+# - Automatically deducts gold from the stolen funds to update the character’s Coin Pouch.
+#
+# Notes:
+# - Players **must have downtime available** before using this alias.
+# - The **difficulty of the crime** depends on the DC set by the user.
+# - The **higher the DC, the riskier the crime, but also the more rewarding.**
+# - If a player **fails all skill checks**, they still gain a small amount from a minor robbery.
+# - Coins are **automatically added to the player’s inventory** upon success.
+
+!alias embed
+{{err("Please Use <#801325072596860948>", pm_user=False) if ctx.channel.id not in (801325072596860948, 733372211917750409, 756265374328160376) else None}}
+
+-title "Crime" 
+-thumb <image>
+t,z = "Quest Downtime","Weekly Downtime"
+{{j=character().get_cc("Weekly Downtime")}}
+{{k=character().get_cc("Quest Downtime")}}
+<drac2>
+t,w,q,ws="Crime","Weekly Downtime","Quest Downtime",0
+if not (character().cc_exists(w) and character().cc_exists(q)):
+  err('Required counters missing. Run !dt first.')
+elif character().get_cc(w):
+  character().mod_cc(w,-1)
+  ws=1
+elif character().get_cc(q):
+  character().mod_cc(q,-1)
+else:
+  err('No downtime remaining.')
+</drac2>
+{{l=character().get_cc("Weekly Downtime")}}
+{{m=character().get_cc("Quest Downtime")}}
+
+<drac2>
+dc = &1&
+char = character()
+stealth = char.skills.stealth
+religRoll = vroll(stealth.d20(min_val=(char.csettings.get('talent') or 0)*10 or None if stealth.prof >= 1 else None))
+
+deception = char.skills.deception
+religRoll2 = vroll(deception.d20(min_val=(char.csettings.get('talent') or 0)*10 or None if deception.prof >= 1 else None))
+
+investigation = char.skills.investigation
+religRoll3 = vroll(investigation.d20(min_val=(char.csettings.get('talent') or 0)*10 or None if investigation.prof >= 1 else None))
+
+succ1=religRoll.total>=dc
+succ2=religRoll2.total>=dc
+succ3=religRoll3.total>=dc
+
+aa=succ1+succ2+succ3
+ab=succ1 and succ2
+ac=succ1 and succ3
+ad=succ2 and succ3
+
+</drac2>
+
+-desc  "{{name}} spends one {{'Weekly Downtime' if ws else 'Quest Downtime'}} in criminal activity!"
+
+-f "Results|
+Target - Your Rolls
+(Stealth) {{dc}} - {{religRoll.total}} {{'Success' if religRoll.total>=dc else 'Fail'}}
+(Deception) {{dc}} - {{religRoll2.total}} {{'Success' if religRoll2.total>=dc else 'Fail'}}
+(Investigation) {{dc}} - {{religRoll3.total}} {{'Success' if religRoll3.total>=dc else 'Fail'}}
+
+You gain {{'1,000 gp, robbery of one of the richest figures in town.' if succ1 and succ2 and succ3 else '200 gp, robbery of a noble.' if ab or ac or ad else '100 gp, robbery of a prosperous merchant.' if succ1 or succ2 or succ3 else '50 gp, robbery of a struggling merchant.'}}"
+
+{{b= 1000 if succ1 and succ2 and succ3 else 200 if ab or ac or ad else 100 if succ1 or succ2 or succ3 else 50}}
+
+<drac2>
+bags = load_json(get('bags', '[]'))
+bagsDict = {bag: items for bag, items in bags}
+coins = bagsDict.get('Coin Pouch', {"cp": 0, "sp": 0, "ep": 0, "gp": 0, "pp": 0})
+coins['gp'] -= b
+
+bagsDict['Coin Pouch'] = coins
+character().set_cvar('bags', dump_json(list(bagsDict.items())))
+</drac2>
+
+-f "Downtime: | Weekly Downtime: {{j}} -> {{l}}
+Quest Downtime {{k}} -> {{m}}
+Gold Coins:  {{coins['gp']-b}} -> {{coins['gp']}}"
+
+-footer "Use !dthelp for help
+Coins have been automatically added to your pouch"

@@ -1,0 +1,136 @@
+# Game Master Points - Loot Roll Alias
+# This alias automates loot rolling using Game Master Points (GMP) in Avrae.
+#
+# Usage:
+# - Run this command to spend 3 GMP and roll for loot.
+# - The loot roll is modified based on character Prestige Level.
+# - The outcome is determined by a 1d100 roll plus Prestige bonuses.
+#
+# Features:
+# - Rolls **1d100** and adds the character’s Prestige Level bonus:
+#   - **0-4 Prestige** → No bonus or small boost.
+#   - **5-9 Prestige** → +1 bonus.
+#   - **10-13 Prestige** → +2 bonus.
+#   - **14-18 Prestige** → +3 bonus.
+#   - **19-23 Prestige** → +4 bonus.
+#   - **24-29 Prestige** → +5 bonus.
+# - Determines loot based on level-appropriate tables.
+# - Fetches loot from predefined game variable tables (GVARs).
+# - Displays the final loot result after rolling.
+#
+# Notes:
+# - Players **must spend 3 GMP** to use this alias.
+# - Higher **Prestige Levels improve loot chances**.
+# - Loot results are **drawn from structured GVAR tables**.
+# - The alias **automatically calculates and presents loot outcomes**.
+# - This system is **part of a larger Game Master reward structure**.
+
+
+!alias embed
+{{err("Please Use <#733372211917750409>", pm_user=False) if ctx.channel.id != 733372211917750409 else None}}
+-title "Game Master Points - Loot Roll"
+
+{{b=vroll("1d100")}} 
+
+<drac2>
+C,L = character(),character().levels.total_level
+if character().cc_exists("Prestige") and L < 4:
+  z = 0
+if character().cc_exists("Prestige") and L < 9:
+  z = 1
+elif character().cc_exists("Prestige") and L < 14:
+  z = 2
+elif character().cc_exists("Prestige") and L < 19:
+  z = 3
+elif character().cc_exists("Prestige") and L < 24:
+  z = 4
+elif character().cc_exists("Prestige") and L < 30:
+  z = 5
+elif not character().cc_exists("Prestige"):
+  z = 0
+</drac2>
+
+{{bb=b.total+z}}
+
+<drac2>
+C,L = character(),character().levels.total_level
+if L < 5:
+  if bb < 65:
+    table=load_json(get_gvar("a7322e72-91ab-45ab-b48b-9cf03e870b1c"))
+  elif bb < 106:
+    table=load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))
+  else: ''
+
+elif L < 9:
+  if bb < 54:
+    table=load_json(get_gvar("a7322e72-91ab-45ab-b48b-9cf03e870b1c"))
+  elif bb < 106:
+    table=load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))
+  else: ''
+
+elif L < 13:
+  if bb < 30:
+    table=load_json(get_gvar("a7322e72-91ab-45ab-b48b-9cf03e870b1c"))
+  elif bb < 45:
+    table=load_json(get_gvar("3f2c36be-58e2-4996-a1ad-6a5bebdc2a84"))
+  elif bb < 90:
+    table=load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))
+  elif bb < 106:
+    table=load_json(get_gvar("3a7eca09-0810-4561-9299-094c996954c3"))
+  else: ''
+
+elif L < 17:
+  if bb < 40:
+    table=load_json(get_gvar("3f2c36be-58e2-4996-a1ad-6a5bebdc2a84"))
+  elif bb < 70:
+    table=load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))
+  elif bb < 86:
+    table=load_json(get_gvar("370ea648-2264-41fd-abff-5c5f8dac5ff5"))
+  elif bb < 95:
+    table=load_json(get_gvar("3a7eca09-0810-4561-9299-094c996954c3"))
+  elif bb < 106:
+    table=load_json(get_gvar("af350838-1d99-4dba-9b66-34ad1be0ff79"))
+  else: ''
+
+elif L < 21:
+  if bb < 60:
+    table=load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))
+  elif bb < 80:
+    table=load_json(get_gvar("370ea648-2264-41fd-abff-5c5f8dac5ff5"))
+  elif bb < 90:
+    table=load_json(get_gvar("3a7eca09-0810-4561-9299-094c996954c3"))
+  elif bb < 95:
+    table=load_json(get_gvar("af350838-1d99-4dba-9b66-34ad1be0ff79"))
+  elif bb < 106:
+    table=load_json(get_gvar("9b14b7a9-d6b2-41cf-80f4-75f5f2ee5fa4"))
+  else: ''
+
+elif L < 26:
+  if bb < 60:
+    table=load_json(get_gvar("370ea648-2264-41fd-abff-5c5f8dac5ff5"))
+  elif bb < 85:
+    table=load_json(get_gvar("3a7eca09-0810-4561-9299-094c996954c3"))
+  elif bb < 92:
+    table=load_json(get_gvar("af350838-1d99-4dba-9b66-34ad1be0ff79"))
+  elif bb < 106:
+    table=load_json(get_gvar("9b14b7a9-d6b2-41cf-80f4-75f5f2ee5fa4"))
+  else: ''
+highest=[x for x in table][-1]
+diceroll=vroll(f"1d{highest}")
+result=[table[x] for x in table if diceroll.total<=int(x)]
+</drac2>
+
+highest=[x for x in table][-1]
+diceroll=vroll(f"1d{highest}")
+result=[table[x] for x in table if diceroll.total<=int(x)]
+</drac2>
+
+{{bbb=b.total+z}}
+-desc "{{name}} find loot!
+**Prestige Level {{L if character().cc_exists("Prestige") else "0"}}: +{{z}} to Loot Roll**
+**Roll: {{b.dice}} -> {{bbb}}**
+**Result:** {{diceroll}} - {{result[0]}}
+**Cost:** 3 GMP"
+
+-thumb <image>
+-footer "Game Master Rewards"

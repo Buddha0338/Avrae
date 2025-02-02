@@ -1,0 +1,214 @@
+# Magic Council: Bounty Board Alias
+# This alias allows characters to participate in bounty hunts for rewards in Avrae.
+#
+# Usage:
+# - Run the command to check available bounties and roll for completion.
+# - Selects the highest available bounty and grants **EXP, GP, and Magic Council Points**.
+# - Automatically manages **weekly bounty allowances**.
+#
+# Features:
+# - **Bounty Ranks**:
+#   - **Bronze (Lv 1-4)** → Small rewards.
+#   - **Silver (Lv 5-8)** → Moderate rewards.
+#   - **Electrum (Lv 9-12)** → Increased difficulty and payout.
+#   - **Gold (Lv 13-16)** → High-level challenges.
+#   - **Platinum (Lv 17-30)** → Elite bounty hunts.
+# - **Automated Rank Selection**:
+#   - Chooses the highest available bounty **descending in difficulty**.
+#   - If the highest bounty is unavailable, moves to the next available one.
+# - **Skill Checks and Rewards**:
+#   - Rolls for **skill check difficulty** based on bounty rank.
+#   - **EXP and GP rewards scale** with bounty difficulty.
+#   - **Magic Council Points (MCP)** accumulate for future rewards.
+#
+# Notes:
+# - **Limited bounties per week**. If no bounties remain, the alias returns an error.
+# - **Higher-ranked bounties yield better rewards**.
+# - **Works best for campaigns with structured ranking systems**.
+# - **EXP, GP, and MCP are all automatically tracked** within Avrae's character sheet.
+#
+# Related Commands:
+# - `!mp +/- #` → Adjust Magic Council Points manually.
+
+
+!alias embed
+
+<drac2>
+b1,s1,e1,g1,p1,mp = "Bronze Bounty", "Silver Bounty","Electrum Bounty","Gold Bounty","Platinum Bounty","Magic Council Points"
+C,L = character(),character().levels.total_level
+
+if not character().cc_exists(mp):
+  character().create_cc(mp, 0, 999, None, 'number')
+  character().set_cc(mp, 0)
+if not character().cc_exists(b1) and L < 5:
+  character().create_cc(b1,0,2,None)
+if not character().cc_exists(s1) and L < 9:
+  character().create_cc(s1,0,2,None)
+  character().create_cc(b1,0,2,None)
+if not character().cc_exists(e1) and L < 13:
+  character().create_cc(e1,0,1,None)
+  character().create_cc(s1,0,2,None)
+  character().create_cc(b1,0,2,None)
+if not character().cc_exists(g1) and L < 17:
+  character().create_cc(g1,0,1,None)
+  character().create_cc(e1,0,1,None)
+  character().create_cc(s1,0,2,None)
+  character().create_cc(b1,0,2,None)
+if not character().cc_exists(p1) and L < 30:
+  character().create_cc(p1,0,1,None)
+  character().create_cc(g1,0,1,None)
+  character().create_cc(e1,0,1,None)
+  character().create_cc(s1,0,2,None)
+  character().create_cc(b1,0,2,None)
+else: ''
+
+b1e,s1e,ee,ge,pe,mpe=character().get_cc(b1),character().get_cc(s1),character().get_cc(e1),character().get_cc(g1),character().get_cc(p1),character().get_cc(mp)
+
+b0 = character().get_cc(b1)==0
+s0 = character().get_cc(s1)==0
+e0 = character().get_cc(e1)==0
+g0 = character().get_cc(g1)==0
+p0 = character().get_cc(p1)==0
+
+# We need to make it choose the highest one, then descend.
+
+if L < 5:
+    table = load_json(get_gvar("0157c23d-5940-4d04-a908-becd7f2583a5"))
+    character().mod_cc("Bronze Bounty",-1)
+    rank = "Bronze"
+    skill_check = vroll("1d5+7")
+    exp_reward = vroll("5d5+75")
+    gp_reward = vroll("5d10+50")
+    if b1e == 0:
+        err('There are no more bounties this week')    
+
+elif L < 9:
+    if s1e > 0:
+        table = load_json(get_gvar("0e04a7ae-54c8-445a-a84f-dd3e6ab5a163"))
+        character().mod_cc("Silver Bounty",-1)
+        rank = "Silver"
+        skill_check = vroll("1d5+9")
+        exp_reward = vroll("3d50+100")
+        gp_reward = vroll("5d25+75")
+    if s1e == 0:
+        table = load_json(get_gvar("0157c23d-5940-4d04-a908-becd7f2583a5"))
+        character().mod_cc("Bronze Bounty",-1)
+        rank = "Bronze"
+        skill_check = vroll("1d5+7")
+        exp_reward = vroll("5d5+75")
+        gp_reward = vroll("5d10+50")
+    if b1e == 0 and s1e == 0:
+        err('There are no more bounties this week')  
+elif L < 13:
+    if ee > 0:
+        table = load_json(get_gvar("c4447544-e5dc-4116-928d-4bb5199f21ff"))
+        character().mod_cc("Electrum Bounty",-1)
+        rank = "Electrum"
+        skill_check = vroll("1d5+10")
+        exp_reward = vroll("3d100+200")
+        gp_reward = vroll("2d100+200")
+    if ee == 0:
+        table = load_json(get_gvar("0e04a7ae-54c8-445a-a84f-dd3e6ab5a163"))
+        character().mod_cc("Silver Bounty",-1)
+        rank = "Silver"
+        skill_check = vroll("1d5+9")
+        exp_reward = vroll("3d50+100")
+        gp_reward = vroll("5d25+75")    
+    if ee == 0 and s1e == 0:
+        table = load_json(get_gvar("0157c23d-5940-4d04-a908-becd7f2583a5"))
+        character().mod_cc("Bronze Bounty",-1)
+        rank = "Bronze"
+        skill_check = vroll("1d5+7")
+        exp_reward = vroll("5d5+75")
+        gp_reward = vroll("5d10+50")
+    if b1e == 0 and s1e == 0 and ee == 0:
+        err('There are no more bounties this week') 
+elif L < 17:
+    if ge > 0:
+        table=load_json(get_gvar("3e131317-ae57-4439-b534-396876bf2a12"))
+        character().mod_cc("Gold Bounty",-1)
+        rank = "Gold"
+        skill_check = vroll("1d5+12")
+        exp_reward = vroll("5d100+500")
+        gp_reward = vroll("5d500+500")
+    if ge == 0:
+        table = load_json(get_gvar("c4447544-e5dc-4116-928d-4bb5199f21ff"))
+        character().mod_cc("Electrum Bounty",-1)
+        rank = "Electrum"
+        skill_check = vroll("1d5+10")
+        exp_reward = vroll("3d100+200")
+        gp_reward = vroll("2d100+200")
+    if ge == 0 and ee == 0:
+        table = load_json(get_gvar("0e04a7ae-54c8-445a-a84f-dd3e6ab5a163"))
+        character().mod_cc("Silver Bounty",-1)
+        rank = "Silver"
+        skill_check = vroll("1d5+9")
+        exp_reward = vroll("3d50+100")
+        gp_reward = vroll("5d25+75")
+    if ge == 0 and ee == 0 and s1e == 0:
+        table = load_json(get_gvar("0157c23d-5940-4d04-a908-becd7f2583a5"))
+        character().mod_cc("Bronze Bounty",-1)
+        rank = "Bronze"
+        skill_check = vroll("1d5+7")
+        exp_reward = vroll("5d5+75")
+        gp_reward = vroll("5d10+50")
+    if b1e == 0 and s1e == 0 and ee == 0 and ge == 0:
+        err('There are no more bounties this week') 
+elif L < 30:
+    if pe > 0:
+        table=load_json(get_gvar("10fdbd7f-cc0e-4443-b9b0-6aa564601f74"))
+        character().mod_cc("Platinum Bounty",-1)
+        rank = "Platinum"
+        skill_check = vroll("1d5+15")
+        exp_reward = vroll("10d100+1500")
+        gp_reward = vroll("7d700+800")
+    if pe == 0:
+        table=load_json(get_gvar("3e131317-ae57-4439-b534-396876bf2a12"))
+        character().mod_cc("Gold Bounty",-1)
+        rank = "Gold"
+        skill_check = vroll("1d5+12")
+        exp_reward = vroll("3d100+500")
+        gp_reward = vroll("3d100+400")
+    if pe == 0 and ge == 0:
+        table = load_json(get_gvar("c4447544-e5dc-4116-928d-4bb5199f21ff"))
+        character().mod_cc("Electrum Bounty",-1)
+        rank = "Electrum"
+        skill_check = vroll("1d5+10")
+        exp_reward = vroll("3d100+200")
+        gp_reward = vroll("2d100+200")
+    if pe == 0 and ge == 0 and ee == 0:
+        table = load_json(get_gvar("0e04a7ae-54c8-445a-a84f-dd3e6ab5a163"))
+        character().mod_cc("Silver Bounty",-1)
+        rank = "Silver"
+        skill_check = vroll("1d5+9")
+        exp_reward = vroll("3d50+100")
+        gp_reward = vroll("5d25+75")
+    if pe == 0 and ge == 0 and ee == 0 and s1e == 0:
+        table = load_json(get_gvar("0157c23d-5940-4d04-a908-becd7f2583a5"))
+        character().mod_cc("Bronze Bounty",-1)
+        rank = "Bronze"
+        skill_check = vroll("1d5+7")
+        exp_reward = vroll("5d5+75")
+        gp_reward = vroll("5d10+50")
+    if pe == 0 and ge == 0 and ee == 0 and s1e == 0 and b1e == 0:
+        err('There are no more bounties this week')
+else: 
+    err('There are no more bounties this week')
+
+highest=[x for x in table][-1]
+diceroll=vroll(f"1d{highest}")
+result=[table[x] for x in table if diceroll.total<=int(x)]
+
+</drac2>
+
+-f "**__{{rank}} Bounty__**
+{{result[0]}}
+
+**Skill Check DC:** {{skill_check.total}}
+**Reward:** EXP {{exp_reward.total}}, GP {{gp_reward.total}}
+**Magic Council Points:** {{mpe}}/999"
+
+-title "Magic Council: Bounty Board"
+-thumb <image>
+-desc "The Magic Council allows {{name}} to partake in bounties equal to or below your rank in exchange for rewards."
+-footer "Use !mp +/- # to add your Magic Council Points"

@@ -1,0 +1,68 @@
+# Research Alias
+# This alias automates the process of conducting research using downtime in Avrae.
+#
+# Usage:
+# - Run this command to spend downtime researching a specific subject.
+# - Requires Weekly or Quest Downtime to initiate.
+# - The effectiveness of the research is determined by an Intelligence check.
+# - The number of lore pieces learned depends on the total research roll.
+#
+# Features:
+# - Deducts 1 Weekly or Quest Downtime upon use.
+# - Rolls an **Intelligence check** to determine success.
+# - The total research effectiveness is calculated as:
+#   - **Below 6** → No new information is learned.
+#   - **6-10** → Learns one piece of lore.
+#   - **11-21** → Learns two pieces of lore.
+#   - **22+** → Learns three pieces of lore.
+# - Costs **50 GP plus 50 GP per research modifier**.
+#
+# Notes:
+# - Players **must have downtime available** before using this alias.
+# - The **higher the Intelligence roll, the more lore is learned**.
+# - Research cost scales with the intensity of the research effort.
+# - The alias **automatically deducts gold** for research expenses.
+# - This is useful for **seeking knowledge, uncovering mysteries, or gathering historical insights**.
+
+
+!alias embed
+{{err("Please Use #logbook-downtime", pm_user=False) if ctx.channel.id not in (801325072596860948, 733372211917750409, 756265374328160376) else None}}
+
+-title "Research" 
+-thumb <image>
+t,z = "Quest Downtime","Weekly Downtime"
+{{j=character().get_cc("Weekly Downtime")}}
+{{k=character().get_cc("Quest Downtime")}}
+<drac2>
+t,w,q,ws="Research","Weekly Downtime","Quest Downtime",0
+if not (character().cc_exists(w) and character().cc_exists(q)):
+  err('Required counters missing. Run !dt first.')
+elif character().get_cc(w):
+  character().mod_cc(w,-1)
+  ws=1
+elif character().get_cc(q):
+  character().mod_cc(q,-1)
+else:
+  err('No downtime remaining.')
+</drac2>
+{{l=character().get_cc("Weekly Downtime")}}
+{{m=character().get_cc("Quest Downtime")}}
+
+<drac2>
+char = character()
+intelligence = char.skills.intelligence
+religRoll = vroll(intelligence.d20(min_val=(char.csettings.get('talent') or 0)*10 or None if intelligence.prof >= 1 else None))
+f= religRoll.total
+r = &1&
+</drac2>
+-desc  "{{name}} spends one {{'Weekly Downtime' if ws else 'Quest Downtime'}} researching particular subjects of their choice."
+{{ff=f+r}}
+-f "Results|
+Intelligence Roll: {{f}} +{{r}} = {{ff}}
+Your time spent {{'has effect. You learn nothing' if ff < 6 else 'is barely successful, you learn one piece of lore' if ff < 11 else 'is quite successful, you learn two pieces of lore' if ff <22 else 'is overwhelmingly successful, you learn three pieces of lore' if ff < 50 else ''}} from your research.
+Cost: {{50 + r*50}} GP"
+
+-f "Downtime | Weekly Downtime: {{j}} -> {{l}}
+Quest Downtime: {{k}} -> {{m}}"
+
+-footer "Use !dthelp for help"

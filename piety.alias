@@ -1,0 +1,92 @@
+# Gaining Piety Alias
+# This alias automates the process of gaining piety through religious devotion using downtime in Avrae.
+#
+# Usage:
+# - Run this command to spend downtime seeking to gain piety.
+# - Requires Weekly Downtime or Quest Downtime to attempt a Religion check.
+# - Costs gold based on the character's Piety level, with possible reductions for guild members.
+#
+# Features:
+# - Deducts 1 Weekly or Quest Downtime upon use.
+# - Rolls a Religion check against a DC that scales with the character's Piety level.
+# - Adds +1 Piety on a successful Religion check.
+# - Deducts gold from the character’s Coin Pouch, applying Guild Reduction if applicable.
+#
+# Notes:
+# - If the character lacks downtime, the alias will return an error.
+# - If insufficient gold is available, the alias prevents the transaction.
+# - Piety DC increases as a character becomes more devoted.
+# - Players should ensure they have Weekly or Quest Downtime before using this alias.
+
+
+!alias embed
+{{err("Please Use #logbook-downtime", pm_user=False) if ctx.channel.id != 801325072596860948 else None}}
+
+-title "Gaining Piety" 
+-thumb <image>
+
+t,z = "Quest Downtime","Weekly Downtime"
+{{j=character().get_cc("Weekly Downtime")}}
+{{k=character().get_cc("Quest Downtime")}}
+
+<drac2>
+p,w,q,ws="Piety","Weekly Downtime","Quest Downtime",0
+character().create_cc_nx("Piety",0,100,reset_to=0)
+
+g = 1 if not character().cc_exists("Guild Reduction") else 0.95 if character().cc_exists("Guild Reduction") and character().get_cc("Guild Reduction") == 1 else 0.90 if character().cc_exists("Guild Reduction") and character().get_cc("Guild Reduction") == 2 else 0.85 if character().cc_exists("Guild Reduction") and character().get_cc("Guild Reduction") == 3 else ''
+gg = character().get_cc(p)
+gd = round(gg*g*50)
+
+bags = load_json(get('bags', '[]'))
+bagsDict = {bag: items for bag, items in bags}
+coins = bagsDict.get('Coin Pouch', {"cp": 0, "sp": 0, "ep": 0, "gp": 0, "pp": 0})
+if coins['gp'] < gd: 
+  err('You do not have enough Gold.')
+else:
+  coins['gp'] += -gd
+
+bagsDict['Coin Pouch'] = coins
+character().set_cvar('bags', dump_json(list(bagsDict.items())))
+
+if not (character().cc_exists(w) and character().cc_exists(q)):
+  err('Required counters missing. Run !dt first.')
+elif character().get_cc(w):
+  character().mod_cc(w,-1)
+  ws=1
+elif character().get_cc(q):
+  character().mod_cc(q,-1)
+else:
+  err('No downtime remaining.')
+</drac2>
+
+{{l=character().get_cc("Weekly Downtime")}}
+{{m=character().get_cc("Quest Downtime")}}
+
+<drac2>
+d=character().get_cc(p)
+dc=10 if d < 3 else 12 if d < 10 else 13 if d < 25 else 15 if d < 50 else 17 if d < 75 else 18 if d < 100 else ''
+
+char = character()
+relig = char.skills.religion
+religRoll = vroll(relig.d20(min_val=(char.csettings.get('talent') or 0)*10 or None if relig.prof >= 1 else None))
+
+succ=religRoll.total>=dc
+if succ:
+  character().mod_cc(p,1)
+</drac2>
+
+-desc  "{{name}} spends one {{'Weekly Downtime' if ws else 'Quest Downtime'}} seeking to gain further devotion to their piety."
+
+-f "Results - DC: {{dc}}|
+Current Piety: {{d}}
+Religion Check: {{religRoll}}"
+
+-f '{{"Success!|You gain devotion towards your piety." if succ else "Failure!|You gain no devotion towards your piety."}}
+Resulting Piety: {{character().get_cc(p)}}{{' (+1)' if succ else ''}}
+Cost: {{50 if p==0 else gd}} GP{{' (Guild Reduction)' if character().cc_exists("Guild Reduction") else ''}}
+Gold Coins: {{coins['gp']+gd}} -> {{coins['gp']}}'
+
+-f "Downtime: | Weekly Downtime: {{j}} -> {{l}}
+Quest Downtime: {{k}} -> {{m}}"
+
+-footer "use `!dthelp` for help"

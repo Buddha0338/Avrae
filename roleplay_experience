@@ -1,0 +1,5 @@
+# A module that combines the dt alias to provide experience for text-based roleplay
+
+tembed 
+{{err("Please Use #logbook-rpxp", pm_user=False) if ctx.channel.id != 871770766818021376 else None}}
+{{get_gvar("f012531e-423a-49ab-a01f-c740d385195d").replace("&*"+"&","&*&").replace("&AR"+"GS&",str(&ARGS&))}}

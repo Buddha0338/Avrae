@@ -1,0 +1,40 @@
+# Learning Proficiency Alias
+# This alias automates the tracking of proficiency learning progress using Avrae's downtime system.
+#
+# Usage:
+# - Run this command while learning a proficiency (e.g., `!learn Smith's Tools`).
+# - It tracks weekly progress and deducts available downtime weeks.
+# - If the proficiency name is not typed exactly the same each time, progress may be lost.
+#
+# Features:
+# - Creates a counter for the proficiency being learned, if not already existing.
+# - Deducts one week from the character’s available downtime.
+# - Updates and displays the remaining downtime and learning progress.
+#
+# Notes:
+# - The number of weeks required is **10 minus the Intelligence modifier**.
+# - Players should **use the same wording** each time they run the alias to avoid resetting progress.
+# - If downtime weeks reach zero, learning cannot progress further until more downtime is available.
+
+
+!alias embed
+{{err("Please Use <#801325072596860948>", pm_user=False) if ctx.channel.id != 801325072596860948 else None}}
+-thumb <image>
+-footer "Learning a proficiency takes a number of weeks equal to 10 minus your intelligence modifier. Be sure to type `!learn Smith's Tools` exactly the same each time or else you will lose progress."
+
+{{cc = "&*& Learning"}}
+{{b=character().create_cc_nx("&*&",0,(10-intelligenceMod),reset_to=0)}}
+
+-title "{{f"{name} begins to learn proficiency in &*&"}}"
+
+{{c=get_cc("Downtime Weeks")}}
+{{mod_cc("Downtime Weeks",-1)}}
+{{a=get_cc("Downtime Weeks")}}
+
+{{mod_cc("&*&",+ 1)}}
+{{d=cc_str("&*&")}}
+
+-desc "Downtime before activity: **{{c}}**
+Total remaining downtime: **{{a}}**
+You continue to learn &*&: **{{d}}**
+It will take you **{{(10 -intelligenceMod)}}** weeks of study to finish learning."

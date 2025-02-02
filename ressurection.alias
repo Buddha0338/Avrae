@@ -1,0 +1,48 @@
+# Resurrection Roll Alias
+# This alias automates the process of rolling for a new race upon resurrection in Avrae.
+#
+# Usage:
+# - Run this command when casting a resurrection spell on a character.
+# - Rolls a 1dX based on a predefined resurrection race table (GVAR-based).
+# - Determines the new race of the resurrected character.
+#
+# Features:
+# - Uses an external **GVAR table** to determine resurrection outcomes.
+# - Rolls a **1dX** to randomly assign a new race upon resurrection.
+# - Displays the resurrection spell description, detailing its effects and limitations.
+# - Applies resurrection penalties that reduce with long rests.
+#
+# Notes:
+# - The **race change is random**, ensuring an unpredictable resurrection experience.
+# - The resurrection follows **standard D&D spell rules**, including:
+#   - Restoration of hit points, removal of poisons, and healing of wounds.
+#   - Retention of magical diseases and curses if not removed beforehand.
+#   - A temporary **-4 penalty to all rolls**, reduced by 1 per long rest.
+# - Resurrection for characters **dead for over a year** results in caster penalties.
+# - The alias **automatically rolls and selects a new race** from the predefined table.
+
+
+
+
+!alias embed
+{{err("Oops! Please use <#741654312853438485>", pm_user=False) if ctx.channel.id not in (812515675754332262, 733372413001334907, 771879736494260264, 1030709198784299038, 741654312853438485) else None}}
+
+{{table=load_json(get_gvar("772659f4-5188-40b9-b662-0d75dfb7b63f"))}}
+{{highest=[x for x in table][-1]}}
+{{diceroll=vroll(f"1d{highest}")}}
+{{result=[table[x] for x in table if diceroll.total<=int(x)]}}
+
+-title "Resurrection Roll"
+-desc "**New Race: {{result[0]}}**
+You touch a dead creature that has been dead for no more than a century, that didn’t die of old age, and that isn’t undead. If its soul is free and willing, the target returns to life with all its hit points.
+
+This spell neutralizes any poisons and cures normal diseases afflicting the creature when it died. It doesn’t, however, remove magical diseases, curses, and the like; if such affects aren’t removed prior to casting the spell, they afflict the target on its return to life.
+
+This spell closes all mortal wounds and restores any missing body parts.
+
+Coming back from the dead is an ordeal. The target takes a -4 penalty to all attack rolls, saving throws, and ability checks. Every time the target finishes a long rest, the penalty is reduced by 1 until it disappears.
+
+Casting this spell to restore life to a creature that has been dead for one year or longer taxes you greatly. Until you finish a long rest, you can’t cast spells again, and you have disadvantage on all attack rolls, ability checks, and saving throws."
+
+-thumb <image>
+-f "Roll - {{diceroll}}| `!resurrection`"
