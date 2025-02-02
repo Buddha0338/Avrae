@@ -1,0 +1,128 @@
+# Pets, Mounts & Companions Alias
+# This alias provides rules and mechanics for taming, training, and using animal companions in Avrae.
+#
+# Usage:
+# - Run this command to display pet, mount, and companion rules.
+# - Explains how **Downtime is used for taming and training** animals.
+# - Lists **Animal Handling requirements** for managing multiple companions.
+# - Introduces **the Animal Wrangler feat** and its benefits.
+#
+# Features:
+# - **Companion Rules**:
+#   - The number of companions a character can have depends on **Animal Handling proficiency**.
+#   - Defines **CR limits** for companions:
+#     - No Proficiency → **Character Level ÷ 8**.
+#     - Proficiency → **Character Level ÷ 4**.
+#     - Expertise → **Character Level ÷ 2**.
+# - **New Feat: Animal Wrangler**:
+#   - Grants **expertise in Animal Handling**.
+#   - Allows **an additional bonus action command** per turn.
+#   - Provides **free casting of Animal Friendship and Beast Bond** once per dawn.
+# - **Revised Druid & Ranger Spells**:
+#   - Updates Animal Friendship, Beast Bond, and new spells like Revivify Beast.
+# - **Improved Class Features**:
+#   - **Druid Summons** → Summons scale based on level.
+#   - **Ranger Beastmaster** → Expands companion CR and allows for a second primal companion.
+#   - **Drakewarden** → Doubles proficiency bonus for drake stats.
+#   - **Paladin Find Steed / Find Greater Steed** → Expands available mount options.
+#   - **Fighter Cavalier** → Features apply to companion mechanics.
+#
+# Notes:
+# - **Spellcasting companions lose innate spell abilities** unless granted by racial traits.
+# - **Higher proficiency allows more and stronger companions**.
+# - **Class features have been rebalanced** to accommodate the pet system.
+# - Provides **quick access to rules and mechanics** for players handling mounts and animal companions.
+
+
+embed
+{{err("Please Use another channel for `!masterwork`", pm_user=False) if ctx.channel.id == 801325072596860948 else None}}
+
+-title "Pets, Mounts & Companions" 
+-thumb <image>
+
+-desc "**__Downtime Activity: Taming & Training Animals__**
+Since the dawn of civilization, humanoids have been using trained animals in many ways, from companionship to fierce caombat able parters. Much like a knight and their trusty steed or a hunter and their keep eyed falcon. Haveners too, can now benefit from these forms of companionship.
+
+__Spellcaster Variant__
+Companions that are tamed do not have the spellcasting ability, whether it be innate or not. If a racial feature allows it to cast spells once per day, you conpaion may cast them.
+
+__Number of Companions & total CR of companions__
+The number of companions you can have is directly related to your proficiency in animal handling. Proficiency and expertise grants up to two companions, otherwise the maximum remains 1.
+
+No Proficiency - Character level/8
+Proficiency - Character level/4
+Expertise - Character level/2
+
+**__New Feat: Animal Wrangler__**
+*Prerequisite: Proficiency with the Animal Handling skill*
+You have a knack dealing with beasts and making them follow your commands. You gain the following benefits:
+
+• You gain expertise in the Animal Handling skill.
+• On your turn, you can issue one additional free or bonus action command to one of your animal companions. This ability extends to class abilities but not spells nor items.
+• In addition, you learn the animal friendship and beast bond spells, each of which you can cast once per dawn without a spell slot.
+
+**__Revised Druid & Ranger spells__**
+• Animal Friendship (revised)
+• Beast Bond (revised)
+• Calm Beasts
+• Revivify Beast
+
+**__Improved Class Features__**
+Due to the availability of companions, classes that rely on or use compaon as a base have been adjusted slightly
+
+__Druid Summons__
+For every 10 levels in this class, the druid can increase the CR of beasts and Fey by one step. CR 1/2 creatures are summoned as CR 1 and CR 1/8 creatures as CR 1/4 instead. Additionally, the Summon Fey and Summon Beast spells are cast as if they were 1 level higher to a maximum of 9th level.
+
+__Ranger Beastmaster__
+1. Ranger Companion
+The Cr of your companion is equal to and varies based on your animal handling proficiency mentioned at in __Pets, Mounts, & Companions__ section.
+
+2. Primal Companion
+The Ranger may have a second primal companion
+
+3. Drakewarden
+The Drake companion's stats vary with twice your proficiency bonus instead of one. Any stat, ability or attack that adds your proficiency bonus is doubled. Armor Class is exluded from this benefit.
+
+Bite. Melee Weapon Attack: +3 plus 2xPB to hit, reach 5 ft., one target. Hit: 1d6 plus 2xPB piercing damage.
+
+__Paladin__
+1. Find Steed
+The Find Steed Spell now has an expanded list of mounts with a greater challenge rating.
+
+• Cockatrice
+• Giant Goat
+• Valenar Steed
+• Awakened Brown Bear
+• DireWolf
+• Giant Eagle
+• Giant Raven
+• Hippogriff
+• Lion / Tiger / Snow Leopard
+• Young Winter Wolf
+• Brass / Copper Dragon Wyrmling*
+
+2. Find Greater Steed
+The Find Greater Steed now has an expanded list of mounts with a greater challenge rating.
+
+• Winged Bull
+• Winged Lion
+• Armored Sabre Tooth Tiger
+• Awakened White Moose
+• Bristled Moorbounder
+• Basilik Manticore
+• Owlbear / Snowy Owlbear
+• Winter Wolf / Guardian Wolf
+• Nightmare
+• Blue / Gold / Red Dragon Wyrmling
+*Wyrmlings require expertise in Animal Handling*
+
+__Fighter Cavalier__
+The Fighter Cavalier features of taming now extended to these traits as well.
+
+• Born to the Saddle
+• Warding Maneuver
+
+[Pets, Mounts, & Companions](https://homebrewery.naturalcrit.com/share/tGqqSkvKHmJD)
+[Animal Wrangler Feat DDB Homebrew](https://www.dndbeyond.com/feats/1627302-animal-wrangler)"
+
+-f "Use `!masterwork` to open this page"
