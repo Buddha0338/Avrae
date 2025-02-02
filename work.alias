@@ -1,0 +1,89 @@
+# Work Alias
+# This alias automates the process of earning gold through work using downtime in Avrae.
+#
+# Usage:
+# - Run this command to spend downtime working.
+# - Requires Weekly or Quest Downtime to initiate.
+# - Gold earned is based on the character’s level.
+# - If the character has the "Encore" trait, earnings are doubled.
+#
+# Features:
+# - Deducts 1 Weekly or Quest Downtime upon use.
+# - Determines gold earned based on level:
+#   - **Level 1-4** → 50 GP
+#   - **Level 5-8** → 100 GP
+#   - **Level 9-12** → 250 GP
+#   - **Level 13-16** → 500 GP
+#   - **Level 17+** → 1,000 GP
+# - If the character has the **Encore** ability, their earnings are doubled.
+# - Automatically adds the earned gold to the character’s Coin Pouch.
+#
+# Notes:
+# - Players **must have downtime available** before using this alias.
+# - The **gold earned is automatically adjusted based on level**.
+# - If a player has **Encore**, the alias automatically applies **double rewards**.
+# - Coins are **automatically added to the player’s inventory** upon use.
+# - This alias is useful for **passive income generation** between quests.
+
+
+
+!alias tembed
+{{err("Please Use <#801325072596860948>", pm_user=False) if ctx.channel.id not in (801325072596860948, 733372211917750409, 756265374328160376) else None}}
+
+-title "Work"
+t,z = "Quest Downtime","Weekly Downtime"
+{{j=character().get_cc("Weekly Downtime")}}
+{{k=character().get_cc("Quest Downtime")}}
+
+<drac2>
+w,q,ws="Weekly Downtime","Quest Downtime",0
+if not (character().cc_exists(w) and character().cc_exists(q)):
+  err('Required counters missing. Run !dt first.')
+elif character().get_cc(w):
+  character().mod_cc(w,-1)
+  ws=1
+elif character().get_cc(q):
+  character().mod_cc(q,-1)
+else:
+  err('No downtime remaining.')
+</drac2>
+
+{{l=character().get_cc("Weekly Downtime")}}
+{{m=character().get_cc("Quest Downtime")}}
+
+<drac2>
+C,L = character(),character().levels.total_level
+if L < 5:
+  b = 50
+elif L < 9:
+  b = 100
+elif L <13:
+  b = 250
+elif L <17:
+  b = 500
+elif L <30:
+  b = 1000
+
+if character().cc_exists("Encore"):
+  b *= 2
+</drac2>
+
+<drac2>
+bags = load_json(get('bags', '[]'))
+bagsDict = {bag: items for bag, items in bags}
+coins = bagsDict.get('Coin Pouch', {"cp": 0, "sp": 0, "ep": 0, "gp": 0, "pp": 0})
+coins['gp'] += b
+
+bagsDict['Coin Pouch'] = coins
+character().set_cvar('bags', dump_json(list(bagsDict.items())))
+</drac2>
+
+-desc "{{name}} spends a week working and gains **{{b}}** GP."
+
+-f "Downtime: | Weekly Downtime: {{j}} -> {{l}}
+Quest Downtime: {{k}} -> {{m}}
+Gold Coins: {{coins['gp']-b}} -> {{coins['gp']}}"
+
+-thumb <image>
+-footer "Working grants you gold based on your level. Use `!dthelp` for help
+Coins have been automatically added to your pouch"
