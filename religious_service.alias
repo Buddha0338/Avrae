@@ -1,0 +1,67 @@
+# Religious Service Alias
+# This alias automates the process of performing religious services using downtime in Avrae.
+#
+# Usage:
+# - Run this command to spend downtime performing religious services.
+# - Requires Weekly or Quest Downtime to initiate.
+# - The outcome is determined by a Persuasion check.
+# - Successful services earn the character **favors** from a place of worship.
+#
+# Features:
+# - Deducts 1 Weekly or Quest Downtime upon use.
+# - Rolls a **Persuasion check** to determine effectiveness.
+# - Earns favors based on the result:
+#   - **Below 10** → No effect; efforts fail to make a lasting impression.
+#   - **10-19** → Earns **one favor** from a place of worship.
+#   - **20-49** → Earns **two favors** from a place of worship.
+# - Favors can be used for **future benefits, blessings, or divine interventions**.
+# - Costs **0 GP**, making it a **non-monetary downtime activity**.
+#
+# Notes:
+# - Players **must have downtime available** before using this alias.
+# - The **higher the Persuasion roll, the greater the favor earned**.
+# - Favors may be used **at DM discretion** for influence, support, or divine aid.
+# - This alias is useful for **roleplaying religious devotion** and **gaining narrative advantages**.
+
+
+!alias embed
+{{err("Please Use <#801325072596860948>", pm_user=False) if ctx.channel.id not in (801325072596860948, 733372211917750409, 756265374328160376) else None}}
+
+-title "Religious Service" 
+-thumb <image>
+t,z = "Quest Downtime","Weekly Downtime"
+{{j=character().get_cc("Weekly Downtime")}}
+{{k=character().get_cc("Quest Downtime")}}
+<drac2>
+t,w,q,ws="Religious Service","Weekly Downtime","Quest Downtime",0
+if not (character().cc_exists(w) and character().cc_exists(q)):
+  err('Required counters missing. Run !dt first.')
+elif character().get_cc(w):
+  character().mod_cc(w,-1)
+  ws=1
+elif character().get_cc(q):
+  character().mod_cc(q,-1)
+else:
+  err('No downtime remaining.')
+</drac2>
+{{l=character().get_cc("Weekly Downtime")}}
+{{m=character().get_cc("Quest Downtime")}}
+
+<drac2>
+char = character()
+persuasion = char.skills.persuasion
+religRoll = vroll(persuasion.d20(min_val=(char.csettings.get('talent') or 0)*10 or None if persuasion.prof >= 1 else None))
+f= religRoll.total
+
+</drac2>
+-desc  "{{name}} spends one {{'Weekly Downtime' if ws else 'Quest Downtime'}} performing religious services."
+
+-f "Results|
+Persuasion Roll: {{f}}
+Your services {{'have no effect. Your efforts fail to make a lasting impression' if f < 10 else 'earn you one favor' if f < 20 else 'earn you two favors' if f < 50 else ''}} from a place of worship.
+Cost: 0 GP"
+
+-f "Downtime | Weekly Downtime: {{j}} -> {{l}}
+Quest Downtime: {{k}} -> {{m}}"
+
+-footer "Use !dthelp for help"
