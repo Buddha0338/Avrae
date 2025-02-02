@@ -1,0 +1,347 @@
+# Tower of Oblivion Alias
+# This alias simulates a **roguelike dungeon climb** in Avrae.
+#
+# Usage:
+# - Run this command to enter the **Tower of Oblivion**.
+# - Progress through **floors** while managing **Energy, Power, and Injury**.
+# - Defeat enemies, earn **Gold, EXP, and Loot**, or suffer setbacks.
+#
+# Features:
+# - **Energy-Based Exploration**:
+#   - Each attempt **costs Energy**, which resets weekly.
+#   - **Energy is required** to continue progressing.
+#   - If Energy runs out, the player **must rest before continuing**.
+# - **Power Scaling**:
+#   - Player **Power is calculated** based on STR, CON, DEX, INT, WIS, and CHA.
+#   - Each **floor has a Power threshold** to beat.
+#   - Failing to meet Power requirements **ends the climb**.
+# - **Loot & Encounters**:
+#   - **Gold and EXP rewards** increase with floor progression.
+#   - **Loot has a scaling chance to drop**, increasing with each failed attempt.
+#   - Possible **special encounters**:
+#     - **Beast Encounters** → Attempt to tame a wild creature.
+#     - **Robbery** → Risk losing some gold.
+#     - **Virtue Events** → Gain **Piety or Renown** if applicable.
+# - **Injury System**:
+#   - Players **risk injuries** based on their performance.
+#   - **Different damage types** (Fire, Cold, Necrotic, etc.) lead to unique injuries.
+#   - Accumulating injuries **prevents further climbing**.
+#
+# Notes:
+# - **Energy management is crucial**; running out stops progress.
+# - **Injuries persist** and must be healed with downtime.
+# - **Loot is tied to floor difficulty**, with stronger floors granting better rewards.
+# - **Perfect for long-term progression** in structured campaigns.
+#
+# Related Commands:
+# - `!tower help` → Lists Tower of Oblivion mechanics.
+# - `!tower heal` → Removes accumulated injuries.
+
+
+!alias embed
+{{err("Please Use <#1162874367038992384>", pm_user=False) if ctx.channel.id not in (1162874367038992384, 771879736494260264, 733372413001334907) else None}}
+
+-title "Tower of Oblivion"
+<drac2>
+# Parameters and Stats
+x, y, z, a, hf, fc, lc, injury, em = "Energy", "Power", "Magic Power", "Physical Power", "Highest Floor", "Floors Cleared", "Loot Chance", "Injury", "Energy Max"
+C, L = character(), character().levels.total_level
+STR, CON, DEX = C.stats.strength, C.stats.constitution, C.stats.dexterity
+INT, WIS, CHA = C.stats.intelligence, C.stats.wisdom, C.stats.charisma
+proficiency_bonus = character().stats.prof_bonus
+
+desc = f"**{C.name} delves into the Tower of Oblivion!**\n"
+
+# Injury Table
+injuries = {
+    "Acid": {"1": "Blindness", "2": "Partial Blindness", "3": "Destroyed Hand", "4": "Destroyed Foot or Leg", "5-7": "Major Neuralgia", "8-10": "Minor Neuralgia", "11-13": "Horrible Disfigurement", "14-16": "Blisters", "17-20": "Minor Disfigurement"},
+    "Bludgeoning": {"1": "Brain Injury", "2": "Broken Leg", "3": "Broken Arm", "4": "Internal Injury", "5-7": "Broken Ribs", "8-10": "Major Concussion", "11-13": "Minor Concussion", "14-16": "Severe Bruising", "17-20": "Broken Nose"},
+    "Cold": {"1": "Frostbite (Hand)", "2": "Frostbite (Foot)", "3": "Hypothermia", "4-6": "Chillblains", "7-10": "Freezing Pain", "11-15": "Numbness", "16-20": "Frostburn"},
+    "Fire": {"1": "Severe Burns", "2": "Burn Scars", "3-5": "Blistered Skin", "6-10": "Minor Burns", "11-15": "Smoke Inhalation", "16-20": "Heat Exhaustion"},
+    "Force": {"1": "Broken Ribs", "2": "Bruised Lungs", "3-5": "Cracked Skull", "6-10": "Dislocated Shoulder", "11-15": "Internal Bleeding", "16-20": "Bruising"},
+    "Lightning": {"1": "Nerve Damage", "2-3": "Burned Hand", "4-6": "Temporary Paralysis", "7-10": "Muscle Spasms", "11-15": "Electrical Burns", "16-20": "Static Shock"},
+    "Necrotic": {"1": "Rotting Wound", "2-5": "Weakness", "6-10": "Pale Skin", "11-15": "Chill of Death", "16-20": "Dread Sickness"},
+    "Piercing": {"1": "Punctured Lung", "2": "Severed Hand", "3-5": "Stab Wound", "6-10": "Minor Punctures", "11-15": "Deep Cut", "16-20": "Shallow Wound"},
+    "Poison": {"1": "Organ Damage", "2-3": "Severe Nausea", "4-6": "Fever", "7-10": "Chronic Pain", "11-15": "Sickness", "16-20": "Queasiness"},
+    "Psychic": {"1": "Mental Trauma", "2-3": "Paranoia", "4-6": "Nightmares", "7-10": "Headaches", "11-15": "Confusion", "16-20": "Minor Stress"},
+    "Radiant": {"1": "Blinding Flash", "2-3": "Sunburn", "4-6": "Minor Burns", "7-10": "Heat Exhaustion", "11-15": "Glow Sickness", "16-20": "Radiant Halo"},
+    "Slashing": {"1": "Severed Arm", "2": "Severed Leg", "3-5": "Deep Slash", "6-10": "Surface Cuts", "11-15": "Minor Wounds", "16-20": "Scratches"},
+    "Thunder": {"1": "Ruptured Eardrum", "2": "Bruised Ribs", "3-5": "Fractured Skull", "6-10": "Deafness", "11-15": "Headaches", "16-20": "Loud Ringing"}
+}
+
+# Calculations
+Physical = (3 * STR + 2 * CON + DEX)
+Magical = (2 * INT + 2 * WIS + 2 * CHA)
+Power = (Physical + Magical) * L
+Energy_max = (L + CON + proficiency_bonus) // 2  # Adjusted to half the current value, rounded down
+energy_cost = 1
+
+# Simplified Floor Power
+base_power = Physical + Magical
+
+def floor_power(floor):
+    return base_power + (floor * 10) + vroll("1d10").total  # Add randomness
+
+# Initialize Counters
+if not C.cc_exists(x):
+    C.create_cc(x, 0, Energy_max, None, 'number')
+    C.set_cc(x, Energy_max)
+if not C.cc_exists(em):
+    C.create_cc(em, Energy_max, None, None, 'number')
+else:
+    C.set_cc(em, Energy_max)
+if not C.cc_exists(hf):
+    C.create_cc(hf, 0, None, None, 'number')
+if not C.cc_exists(fc):
+    C.create_cc(fc, 0, None, None, 'number')
+if not C.cc_exists(lc):
+    C.create_cc(lc, 1, None, None, 'number')  # Loot chance starts at 1%
+if not C.cc_exists(injury):
+    C.create_cc(injury, 0, None, None, 'number')
+
+# Fetch highest floor and set starting floor
+current_floor = max(1, C.get_cc(hf) + 1)  # Start from the next floor
+highest_floor_reached = C.get_cc(hf)
+total_gold_reward = 0
+total_exp_reward = 0
+loot_found = None
+diamonds_found = None
+beast_encounter = None
+monster_parts_message = None
+robbery_message = None
+virtue_message = None
+injury_message = 0
+
+# Fetch current gold and experience
+bags = load_json(get('bags', '[]'))
+bagsDict = {bag: items for bag, items in bags}
+coins = bagsDict.get('Coin Pouch', {"cp": 0, "sp": 0, "ep": 0, "gp": 0, "pp": 0})
+initial_gold = coins['gp']
+initial_exp = C.get_cc("Experience") if C.cc_exists("Experience") else 0
+
+# Check energy and injury status before proceeding
+energy_before = C.get_cc(x) if C.cc_exists(x) else 0
+if energy_before <= 0:
+    result = "You have no more Energy left. Energy resets at the start of the week."
+    total_gold_reward = 0
+    total_exp_reward = 0
+    injury_message = ""
+    desc = f"""**{name} delves into the Tower of Oblivion!**
+**Result:** {result}
+**Energy Remaining:** {energy_before}/{Energy_max}"""
+    return f'{{"desc": "{desc}"}}'
+elif C.get_cc(injury) >= 3:
+    injury_message = "You are too injured to continue. Use `!tower heal` to restore injuries."
+    energy_remaining = C.get_cc(x)  # Ensure energy remains unchanged
+    desc = f"""**{name} delves into the Tower of Oblivion!**
+**Injury:** {injury_message}
+**Energy Remaining:** {energy_remaining}/{Energy_max}"""
+    return f'{{"desc": "{desc}"}}'
+
+# Proceed with normal gameplay logic if energy and injuries are sufficient
+current_floor_power = floor_power(current_floor)
+gold_roll = vroll("1d10").total
+exp_roll = vroll("1d10").total
+if Power >= current_floor_power:
+    total_gold_reward = current_floor * (gold_roll + 10) // 3
+    total_exp_reward = current_floor * (exp_roll + 5) // 3
+    C.set_cc(hf, current_floor)  # Update highest floor properly
+    C.mod_cc(x, -1)  # Deduct energy
+
+    # Add gold and experience logic
+    coins['gp'] += total_gold_reward
+    bagsDict['Coin Pouch'] = coins
+    character().set_cvar('bags', dump_json(list(bagsDict.items())))
+
+    if not C.cc_exists("Experience"):
+        C.create_cc("Experience", 0, None, None, 'number')
+    C.mod_cc("Experience", total_exp_reward)
+
+    result = f"Success! Power {Power} vs Floor {current_floor_power}"
+    C.mod_cc(fc, 1)  # Increment Floors Cleared
+else:
+    result = f"Failed! Player Power {Power} vs Floor Power {current_floor_power}"
+    C.mod_cc(x, -1)  # Deduct energy
+
+# Gem logic (1-5)
+if vroll("1d100").total <= 5:
+    diamonds_found = (current_floor // 10) * 50
+
+# Beast Encounter logic (6-10)
+if vroll("1d100").total <= 5:
+    beast_table = {
+        "1/8": ["Barnacle Bess", "Blood Hawk", "Camel", "Dolphin", "Flying Snake", "Giant Crab", "Giant Rat", "Giant Weasel", "Mastiff", "Mountain Goat", "Mule", "Poisonous Snake", "Pony", "Stirge", "Venomous Snake"],
+        "1/4": ["Awakened Elk", "Axe Beak", "Boar", "Cave Badger", "Constrictor Snake", "Cow", "Deep Rothé", "Draft Horse", "Elk", "Fastieth", "Giant Badger", "Giant Bat", "Giant Centipede", "Giant Frog", "Giant Lizard", "Giant Owl", "Giant Poisonous Snake", "Golden Stag", "Panther", "Riding Horse", "Sled Dog", "Space Swine", "Stench Kow", "Swarm of Rats", "Wolf"],
+        "1/2": ["Ape", "Black Bear", "Crocodile", "Fiendish Giant Spider", "Giant Goat", "Giant Sea Horse", "Giant Wasp", "Jaculi", "Reef Shark", "Swarm of Beetles", "Swarm of Insects", "Warhorse"],
+        "1": ["Brown Bear", "Clawfoot", "Dire Wolf", "Giant Eagle", "Giant Hyena", "Giant Octopus", "Giant Spider", "Giant Toad", "Lion", "Tiger"],
+        "2": ["Allosaurus", "Cave Bear", "Giant Constrictor Snake", "Hunter Shark", "Plesiosaurus", "Polar Bear", "Rhinoceros", "Saber-Toothed Tiger"],
+    }
+    cr_level = (current_floor // 20) + 1  # Increment CR by floor range
+    selected_beasts = beast_table.get(str(cr_level), [])
+    if selected_beasts:
+        beast_index = vroll(f"1d{len(selected_beasts)}").total - 1
+        beast_encounter = selected_beasts[beast_index]
+        animal_handling_dc = 10 + (3 * cr_level)
+
+        char = character()
+        animal_handling_skill = char.skills.animalHandling
+        animal_handling_roll = vroll(animal_handling_skill.d20())
+
+        if animal_handling_roll.total >= animal_handling_dc:
+            beast_encounter = f"You encounter a wild {beast_encounter} and manage to tame it."
+        else:
+            beast_encounter = f"You encounter a wild {beast_encounter} but it escapes."
+
+# Loot logic
+loot_chance = C.get_cc(lc) if C.cc_exists(lc) else 1  # Start at 1% chance if not already set
+C.set_cc(lc, loot_chance + 1)  # Increment loot chance each time
+loot_roll = vroll("1d100").total  # Roll for loot chance
+loot_table = None
+loot_found = None
+bb = vroll("1d100kh1").total
+
+if loot_roll <= loot_chance:  # Check if loot is found
+    # Determine the loot table based on character level and bb roll
+    if L < 5:
+        if bb <= 65:
+            loot_table = load_json(get_gvar("2d97cbb6-0bd4-4642-be96-e700fa5cb867"))  # Table A
+        elif bb <= 105:
+            loot_table = load_json(get_gvar("a7322e72-91ab-45ab-b48b-9cf03e870b1c"))  # Table B
+    elif L < 9:
+        if bb <= 53:
+            loot_table = load_json(get_gvar("2d97cbb6-0bd4-4642-be96-e700fa5cb867"))  # Table A
+        elif bb <= 105:
+            loot_table = load_json(get_gvar("a7322e72-91ab-45ab-b48b-9cf03e870b1c"))  # Table B
+    elif L < 13:
+        if bb <= 29:
+            loot_table = load_json(get_gvar("2d97cbb6-0bd4-4642-be96-e700fa5cb867"))  # Table A
+        elif bb <= 44:
+            loot_table = load_json(get_gvar("3f2c36be-58e2-4996-a1ad-6a5bebdc2a84"))  # Table D
+        elif bb <= 89:
+            loot_table = load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))  # Table F
+        elif bb <= 105:
+            loot_table = load_json(get_gvar("3a7eca09-0810-4561-9299-094c996954c3"))  # Table G
+    elif L < 17:
+        if bb <= 39:
+            loot_table = load_json(get_gvar("3f2c36be-58e2-4996-a1ad-6a5bebdc2a84"))  # Table D
+        elif bb <= 69:
+            loot_table = load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))  # Table F
+        elif bb <= 85:
+            loot_table = load_json(get_gvar("a7322e72-91ab-45ab-b48b-9cf03e870b1c"))  # Table B
+        elif bb <= 94:
+            loot_table = load_json(get_gvar("3a7eca09-0810-4561-9299-094c996954c3"))  # Table G
+        elif bb <= 105:
+            loot_table = load_json(get_gvar("af350838-1d99-4dba-9b66-34ad1be0ff79"))  # Table H
+    elif L < 30:
+        if bb <= 39:
+            loot_table = load_json(get_gvar("3f2c36be-58e2-4996-a1ad-6a5bebdc2a84"))  # Table D
+        elif bb <= 69:
+            loot_table = load_json(get_gvar("bf19d252-644b-4fd6-80fc-f088cd5d5f21"))  # Table F
+        elif bb <= 85:
+            loot_table = load_json(get_gvar("a7322e72-91ab-45ab-b48b-9cf03e870b1c"))  # Table B
+        elif bb <= 94:
+            loot_table = load_json(get_gvar("3a7eca09-0810-4561-9299-094c996954c3"))  # Table G
+        elif bb <= 105:
+            loot_table = load_json(get_gvar("af350838-1d99-4dba-9b66-34ad1be0ff79"))  # Table H
+
+    # Roll on the loot table and fetch the item
+    if loot_table:
+        highest = max(int(k) for k in loot_table.keys())  # Ensure correct key handling
+        table_roll = vroll(f"1d{highest}").total
+        loot_found = loot_table.get(str(table_roll), "No loot found.")
+        C.set_cc(lc, 1)  # Reset loot chance to 1% after finding loot
+    else:
+        loot_found = "No loot table selected."
+
+else:
+    loot_found = "No loot found."
+    C.mod_cc(lc, 1)  # Increment loot chance if no loot is found
+
+# Robbery logic (16-20)
+if vroll("1d100").total <= 5:
+    robbed_amount = min(total_gold_reward, coins['gp'])  # Can't lose more than you have
+    coins['gp'] -= robbed_amount
+    bagsDict['Coin Pouch'] = coins
+    character().set_cvar('bags', dump_json(list(bagsDict.items())))
+    robbery_message = f"Oh no! You were robbed of {robbed_amount} gp!"
+
+# Virtue logic (21-25)
+if vroll("1d100").total <= 5:
+    piety = C.cc_exists("Piety") and C.get_cc("Piety") or 0
+    renown = C.cc_exists("Renown") and C.get_cc("Renown") or 0
+    if piety + renown < 100:
+        if renown and (not piety or renown > piety):
+            if renown < 100:
+                C.mod_cc("Renown", 1)
+                virtue_message = f"Renown: {renown + 1} (+1)"
+        elif piety < 100:
+            C.mod_cc("Piety", 1)
+            virtue_message = f"Piety: {piety + 1} (+1)"
+    else:
+        virtue_message = "You find a sacred idol, but it doesn't align with your virtue."
+
+result = f"Success! Power {Power} vs Floor {current_floor_power}"
+C.mod_cc(fc, 1)
+
+# Injury handling
+if vroll("1d100").total <= 5:  # 10% chance for injury
+    injury_type_roll = vroll(f"1d12").total  # 12 injury types (e.g., Acid, Fire, etc.)
+    injury_types = ["Acid", "Bludgeoning", "Cold", "Fire", "Force", "Lightning", "Necrotic", "Piercing", "Poison", "Psychic", "Radiant", "Slashing", "Thunder"]
+    selected_injury = injury_types[injury_type_roll - 1]
+    injury_roll = vroll("1d20").total  # Roll severity within the injury type
+
+    injury_description = None
+    for key, value in injuries[selected_injury].items():
+        if "-" in key:
+            low, high = [int(num) for num in key.split("-")]  # Manually split and convert to integers
+            if low <= injury_roll <= high:
+                injury_description = value
+                break
+        elif int(key) == injury_roll:
+            injury_description = value
+            break
+
+    if injury_description:
+        C.mod_cc(x, -1)  # Deduct additional energy for the injury
+        C.mod_cc(injury, 1)  # Increment injury counter
+        injury_message = f"You suffer an injury: {selected_injury} - {injury_description}."
+
+# Update final energy remaining
+energy_remaining = C.get_cc(x) if C.cc_exists(x) else 0
+current_gold = coins['gp']
+current_exp = C.get_cc("Experience") if C.cc_exists("Experience") else 0
+
+# Build the final output message
+desc = f"""**{name} delves into the Tower of Oblivion!**
+**Result:** {result}
+**Energy:** {energy_remaining}/{Energy_max}
+**Highest Floor Reached:** {current_floor}
+"""
+# Gold and Experience Display
+if total_gold_reward:
+    desc += f"**Gold Earned:** {initial_gold} -> {current_gold} (+{total_gold_reward} gp)\n"
+if total_exp_reward:
+    desc += f"**Exp Gained:** {initial_exp} -> {current_exp} (+{total_exp_reward} XP)\n"
+
+if injury_message:
+    desc += f"**Injury:** {injury_message}\n"
+if diamonds_found:
+    desc += f"**Diamonds Found:** {diamonds_found}\n"
+if loot_found:
+    desc += f"**Loot Found:** {loot_found}\n"
+if beast_encounter:
+    desc += f"**Beast Encounter:** {beast_encounter}\n"
+if robbery_message:
+    desc += f"**Robbery:** {robbery_message}\n"
+if virtue_message:
+    desc += f"**Virtue:** {virtue_message}\n" 
+
+# Escape newlines for JSON compatibility
+escaped_desc = desc.replace("\n", "\\n")
+return f'{{"desc": "{escaped_desc}"}}'
+
+</drac2>
+-desc "{{desc}}"
+-thumb "https://media.discordapp.net/attachments/1030709198784299038/1323098089031995454/fantasy__echoes_of_the_forgotten_by_sabrinanox_dgjkact-fullview.png"
+-footer "Exploring the tower takes energy. Use `!tower help` for guidance."
+-image "https://media.discordapp.net/attachments/1030709198784299038/1323098089031995454/fantasy__echoes_of_the_forgotten_by_sabrinanox_dgjkact-fullview.png?ex=6773469e&is=6771f51e&hm=423587f0baf91f9f45bc04d0a08aa646bc13532cdb02dc65883d33a41ba04997&=&format=webp&quality=lossless&width=1241&height=701"
