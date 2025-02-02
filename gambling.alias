@@ -1,0 +1,96 @@
+# Gambling Alias
+# This alias automates the process of gambling using downtime in Avrae.
+#
+# Usage:
+# - Run this command to spend downtime gambling.
+# - Requires Weekly or Quest Downtime to participate.
+# - The character rolls three skill checks (Insight, Deception, and Intimidation) against randomly generated targets.
+# - Winnings or losses are determined based on success in the skill checks.
+#
+# Features:
+# - Deducts 1 Weekly or Quest Downtime upon use.
+# - Rolls three skill checks:
+#   - **Insight** to read opponents.
+#   - **Deception** to bluff.
+#   - **Intimidation** to pressure opponents.
+# - Compares rolls against randomly generated DCs to determine success.
+# - Rewards or penalties based on results:
+#   - **Success in all three rolls** → Gain **double** the amount bet.
+#   - **Success in two rolls** → Gain **1.5×** the amount bet.
+#   - **Success in one roll** → Lose **half** the money bet.
+#   - **Failure in all rolls** → Lose **all** money bet **and incur a debt** equal to the bet amount.
+#
+# Notes:
+# - Players **must have downtime available** before using this alias.
+# - The bet amount is determined by the player before rolling.
+# - The gambling outcome depends on **multiple skill checks**, making it riskier but more interactive.
+# - If a player **fails all three skill checks**, they incur **a debt equal to their original bet**.
+# - This alias does **not automatically deduct or add gold**, so players must manage their own winnings and losses.
+
+
+!alias embed
+{{err("Please Use <#801325072596860948>", pm_user=False) if ctx.channel.id not in (801325072596860948, 733372211917750409, 756265374328160376) else None}}
+
+-title "Gambling" 
+-thumb <image>
+t,z = "Quest Downtime","Weekly Downtime"
+{{j=character().get_cc("Weekly Downtime")}}
+{{k=character().get_cc("Quest Downtime")}}
+<drac2>
+t,w,q,ws="Gambling","Weekly Downtime","Quest Downtime",0
+if not (character().cc_exists(w) and character().cc_exists(q)):
+  err('Required counters missing. Run !dt first.')
+elif character().get_cc(w):
+  character().mod_cc(w,-1)
+  ws=1
+elif character().get_cc(q):
+  character().mod_cc(q,-1)
+else:
+  err('No downtime remaining.')
+</drac2>
+{{l=character().get_cc("Weekly Downtime")}}
+{{m=character().get_cc("Quest Downtime")}}
+
+<drac2>
+roll1 = vroll("2d10+5")
+a=roll1.total
+roll2 = vroll("2d10+5")
+b=roll2.total
+roll3 = vroll("2d10+5")
+c=roll3.total
+
+char = character()
+insight = char.skills.insight
+religRoll = vroll(insight.d20(min_val=(char.csettings.get('talent') or 0)*10 or None if insight.prof >= 1 else None))
+
+deception = char.skills.deception
+religRoll2 = vroll(deception.d20(min_val=(char.csettings.get('talent') or 0)*10 or None if deception.prof >= 1 else None))
+
+intimidation = char.skills.intimidation
+religRoll3 = vroll(intimidation.d20(min_val=(char.csettings.get('talent') or 0)*10 or None if intimidation.prof >= 1 else None))
+
+succ1=religRoll.total>=a
+succ2=religRoll2.total>=b
+succ3=religRoll3.total>=c
+
+aa=succ1+succ2+succ3
+ab=succ1 and succ2
+ac=succ1 and succ3
+ad=succ2 and succ3
+
+</drac2>
+
+-desc  "{{name}} spends one {{'Weekly Downtime' if ws else 'Quest Downtime'}} gambling!"
+
+-f "Results|
+Target - Your Rolls
+(Insight) {{a}} - {{religRoll.total}} {{'Success' if religRoll.total>=a else 'Fail'}}
+(Deception) {{b}} - {{religRoll2.total}} {{'Success' if religRoll2.total>=b else 'Fail'}}
+(Intimidation) {{c}} - {{religRoll3.total}} {{'Success' if religRoll3.total>=c else 'Fail'}}
+
+You {{'gain double the amount you bet.' if succ1 and succ2 and succ3 else 'gain the amount you bet plus half again more.' if ab or ac or ad else 'lose half the money you bet.' if succ1 or succ2 or succ3 else 'lose all the money you bet, and accrue a debt equal to that amount.'}}"
+
+-f "Downtime: | Weekly Downtime: {{j}} -> {{l}}
+Quest Downtime {{k}} -> {{m}}"
+
+-footer "Use !dthelp for help"
